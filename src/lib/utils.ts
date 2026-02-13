@@ -37,3 +37,18 @@ export function toISODateOnly(d: Date) {
   const day = String(d.getDate()).padStart(2, "0");
   return `${y}-${m}-${day}`;
 }
+
+/** Human-readable date for achieved items (e.g. "13 Feb 2025"). */
+export function formatAchievedDate(isoString: string): string {
+  try {
+    const d = new Date(isoString);
+    if (Number.isNaN(d.getTime())) return isoString.slice(0, 10);
+    return new Intl.DateTimeFormat(undefined, {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    }).format(d);
+  } catch {
+    return isoString.slice(0, 10);
+  }
+}

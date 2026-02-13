@@ -82,6 +82,56 @@ function belowTargetShare(pickedNeeds: number, pickedWants: number, ratioNeeds: 
   return currentNeeds < targetNeeds ? ("need" as const) : ("want" as const);
 }
 
+/** First unspent (incomplete) month the item fits into, given existing achieved items' months. Used when marking achieved. */
+export function getCurrentMonthForNewAchieved(
+  settings: PlanSettings,
+  items: Item[],
+  itemId: string,
+  overrideAchievedMonths?: Record<string, string>
+): string {
+  const item = items.find((i) => i.id === itemId);
+  if (!item) return new Date().toISOString().slice(0, 7);
+
+  const priceInBase = toBaseAmount(
+    item.price,
+    item.currency,
+    settings.baseCurrency,
+    settings.fxRates ?? {}
+  );
+  if (priceInBase == null || priceInBase <= 0) return new Date(settings.startDate + "T00:00:00").toISOString().slice(0, 7);
+
+  const achievedWithMonth = items.filter(
+    (i) => i.achieved && (i.achievedInMonthKey ?? overrideAchievedMonths?.[i.id])
+  );
+  const byMonth: Record<string, { priceInBase: number }[]> = {};
+  for (const it of achievedWithMonth) {
+    const monthKey = it.achievedInMonthKey ?? overrideAchievedMonths?.[it.id];
+    if (!monthKey) continue;
+    const p = toBaseAmount(it.price, it.currency, settings.baseCurrency, settings.fxRates ?? {});
+    if (p != null && p > 0) {
+      if (!byMonth[monthKey]) byMonth[monthKey] = [];
+      byMonth[monthKey].push({ priceInBase: p });
+    }
+  }
+
+  const start = new Date(settings.startDate + "T00:00:00");
+  const monthlyBudget = Number(settings.monthlyBudget || 0);
+  const carryover = !!settings.carryover;
+  const maxMonths = Math.max(1, settings.maxMonths ?? 36);
+
+  let carry = 0;
+  for (let m = 0; m < maxMonths; m++) {
+    const monthDate = addMonths(start, m);
+    const monthKey = ymKeyFromDate(monthDate);
+    let remaining = monthlyBudget + (carryover ? carry : 0);
+    const inMonth = byMonth[monthKey] ?? [];
+    for (const { priceInBase: p } of inMonth) remaining -= p;
+    if (remaining >= priceInBase) return monthKey;
+    carry = carryover ? remaining : 0;
+  }
+  return ymKeyFromDate(start);
+}
+
 export function buildAcquisitionPlan(items: Item[], settings: PlanSettings): AcquisitionPlan {
   const baseCurrency = settings.baseCurrency;
   const startDate = settings.startDate;
@@ -148,6 +198,34 @@ export function buildAcquisitionPlan(items: Item[], settings: PlanSettings): Acq
   const ratioNeeds = Math.max(1, settings.fairnessRatioNeeds || 2);
   const ratioWants = Math.max(1, settings.fairnessRatioWants || 1);
 
+  // Achieved items: assign month (stored or first month they fit), then place in plan
+  const achievedItems = items.filter((it) => it.achieved);
+  const achievedWithKey = achievedItems.filter((it) => it.achievedInMonthKey);
+  const achievedNoKey = achievedItems.filter((it) => !it.achievedInMonthKey).sort((a, b) => a.id.localeCompare(b.id));
+  const tempMonths: Record<string, string> = {};
+  for (const it of achievedWithKey) tempMonths[it.id] = it.achievedInMonthKey!;
+  for (const it of achievedNoKey) tempMonths[it.id] = getCurrentMonthForNewAchieved(settings, items, it.id, tempMonths);
+
+  const achievedByMonth: Record<string, PlannedItem[]> = {};
+  for (const it of achievedItems) {
+    const priceInBase = toBaseAmount(it.price, it.currency, baseCurrency, fxRates);
+    if (priceInBase == null) continue;
+    const monthKey = tempMonths[it.id] ?? it.achievedInMonthKey!;
+    const planned: PlannedItem = {
+      id: it.id,
+      title: it.title,
+      category: it.category,
+      price: priceInBase,
+      currency: it.currency,
+      ...(it.currency !== baseCurrency && { originalPrice: it.price }),
+      priority: it.priority,
+      achieved: true,
+      score: 0,
+    };
+    if (!achievedByMonth[monthKey]) achievedByMonth[monthKey] = [];
+    achievedByMonth[monthKey].push(planned);
+  }
+
   const months: PlanMonth[] = [];
   const maxMonths = Math.max(1, settings.maxMonths || 36);
 
@@ -155,21 +233,21 @@ export function buildAcquisitionPlan(items: Item[], settings: PlanSettings): Acq
   let carry = 0;
 
   for (let m = 0; m < maxMonths; m++) {
-    if (needsPool.length === 0 && wantsPool.length === 0) break;
-
     const monthDate = addMonths(start, m);
     const monthKey = ymKeyFromDate(monthDate);
+    const achievedPicks = achievedByMonth[monthKey] ?? [];
+    if (needsPool.length === 0 && wantsPool.length === 0 && achievedPicks.length === 0) break;
 
     const budgetAdded = monthlyBudget;
     const budgetCarryIn = carryover ? carry : 0;
     let remaining = budgetAdded + budgetCarryIn;
 
-    const picks: PlannedItem[] = [];
-    let pickedNeeds = 0;
-    let pickedWants = 0;
+    const picks: PlannedItem[] = [...achievedPicks];
+    for (const p of achievedPicks) remaining -= p.price;
+    let pickedNeeds = achievedPicks.filter((p) => p.category === "need").length;
+    let pickedWants = achievedPicks.filter((p) => p.category === "want").length;
 
-    // pick loop: while we can afford something in either pool
-    // Safety against infinite loop: track if we made progress
+    // pick loop: fill remaining budget with active (non-achieved) items
     while (true) {
       const canNeed = nextAffordable(needsPool, remaining) !== -1;
       const canWant = nextAffordable(wantsPool, remaining) !== -1;

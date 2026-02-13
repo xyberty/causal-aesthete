@@ -5,7 +5,7 @@ import { buildAcquisitionPlan } from "@/lib/planner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { formatMoney } from "@/lib/utils";
+import { cn, formatMoney } from "@/lib/utils";
 
 export function PlanView() {
   const items = usePlanStore((s) => s.items);
@@ -92,13 +92,29 @@ export function PlanView() {
               ) : (
                 <div className="space-y-2">
                   {m.picks.map((p, idx) => (
-                    <div key={p.id} className="rounded-xl border border-neutral-200 p-3">
+                    <div
+                      key={p.id}
+                      className={cn(
+                        "rounded-xl border p-3",
+                        p.achieved
+                          ? "border-neutral-200 bg-neutral-50"
+                          : "border-neutral-200"
+                      )}
+                    >
                       <div className="flex items-center justify-between gap-3">
                         <div className="min-w-0">
-                          <div className="truncate text-sm font-medium">
+                          <div
+                            className={cn(
+                              "truncate text-sm font-medium",
+                              p.achieved && "text-neutral-500 line-through"
+                            )}
+                          >
                             {idx + 1}. {p.title}
                           </div>
                           <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-neutral-500">
+                            {p.achieved && (
+                              <Badge variant="secondary">Achieved</Badge>
+                            )}
                             <Badge variant="outline">{p.category === "need" ? "Need" : "Want"}</Badge>
                             <span>{formatMoney(p.price, plan.baseCurrency)}</span>
                             {p.originalPrice != null && (

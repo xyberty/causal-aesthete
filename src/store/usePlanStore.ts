@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { DEFAULT_CURRENCY, toCurrency } from "@/lib/currencies";
+import { getCurrentMonthForNewAchieved } from "@/lib/planner";
 
 export type Category = "need" | "want";
 
@@ -15,6 +16,10 @@ export type Item = {
   // In weight mode: higher = more important (0..100 recommended)
   priority: number;
   achieved: boolean;
+  /** When achieved: first unspent month this item fits into (YYYY-MM). Plan is recalculated around it. */
+  achievedInMonthKey?: string;
+  /** User-assigned labels (e.g. family, bike). Only used when settings.enableLabels is true. */
+  labels?: string[];
   createdAt: string; // ISO
   updatedAt: string; // ISO
 };
@@ -32,6 +37,8 @@ export type PlanSettings = {
   alphaPricePenalty: number; // desirability / price^alpha
   /** Manual FX rates: 1 unit of key = value in base. Use supported Currency codes. */
   fxRates: Record<string, number>;
+  /** Advanced: enable labels on items (e.g. family, bike, living-room). */
+  enableLabels?: boolean;
 };
 
 export type AppState = {
@@ -78,6 +85,7 @@ export const defaultState: AppState = {
     maxMonths: 36,
     alphaPricePenalty: 0.35,
     fxRates: {},
+    enableLabels: false,
   },
 };
 
@@ -126,11 +134,20 @@ export const usePlanStore = create<PlanStore>((set, get) => ({
   deleteItem: (id) => set((s) => ({ items: s.items.filter((it) => it.id !== id) })),
 
   toggleAchieved: (id) =>
-    set((s) => ({
-      items: s.items.map((it) =>
-        it.id === id ? { ...it, achieved: !it.achieved, updatedAt: nowIso() } : it
-      ),
-    })),
+    set((s) => {
+      const item = s.items.find((it) => it.id === id);
+      if (!item) return s;
+      const nextAchieved = !item.achieved;
+      const achievedInMonthKey =
+        nextAchieved ? getCurrentMonthForNewAchieved(s.settings, s.items, id) : undefined;
+      return {
+        items: s.items.map((it) =>
+          it.id === id
+            ? { ...it, achieved: nextAchieved, achievedInMonthKey, updatedAt: nowIso() }
+            : it
+        ),
+      };
+    }),
 
   setSettings: (patch) => set((s) => ({ settings: { ...s.settings, ...patch } })),
 
@@ -140,9 +157,11 @@ export const usePlanStore = create<PlanStore>((set, get) => ({
     const merged = { ...defaultState.settings, ...(state.settings ?? {}) };
     merged.baseCurrency = toCurrency(merged.baseCurrency);
     if (!merged.fxRates || typeof merged.fxRates !== "object") merged.fxRates = {};
+    if (merged.enableLabels === undefined) merged.enableLabels = false;
+    const items = Array.isArray(state.items) ? state.items : [];
     set({
       version: 1,
-      items: Array.isArray(state.items) ? state.items : [],
+      items: items.map((it) => ({ ...it, labels: it.labels ?? [] })),
       settings: merged,
     });
   },

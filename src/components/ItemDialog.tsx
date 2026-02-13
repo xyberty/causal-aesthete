@@ -4,13 +4,15 @@ import { CURRENCIES, toCurrency } from "@/lib/currencies";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { LabelCombobox } from "@/components/LabelCombobox";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 type FormState = {
   title: string;
   price: string;
   currency: string;
   category: Category;
+  labels: string[];
 };
 
 function toForm(item?: Item): FormState {
@@ -19,6 +21,7 @@ function toForm(item?: Item): FormState {
     price: item ? String(item.price) : "",
     currency: item ? toCurrency(item.currency) : "EUR",
     category: item?.category ?? "need",
+    labels: item?.labels ? [...item.labels] : [],
   };
 }
 
@@ -28,6 +31,8 @@ export function ItemDialog({
   editing,
   defaultCategory,
   defaultPriority,
+  enableLabels,
+  allLabels,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -36,6 +41,10 @@ export function ItemDialog({
   defaultCategory?: Category;
   /** When adding with defaultCategory, use this priority (append to bottom of list) */
   defaultPriority?: number;
+  /** When true, show label selector (advanced feature). */
+  enableLabels?: boolean;
+  /** All labels ever used on any item (for dropdown suggestions). */
+  allLabels?: string[];
 }) {
   const addItem = usePlanStore((s) => s.addItem);
   const updateItem = usePlanStore((s) => s.updateItem);
@@ -77,6 +86,7 @@ export function ItemDialog({
       category: form.category,
       priority,
       achieved: editing?.achieved ?? false,
+      ...(enableLabels && { labels: form.labels }),
     };
 
     if (editing) updateItem(editing.id, payload);
@@ -139,6 +149,18 @@ export function ItemDialog({
                 <option value="need">Need</option>
                 <option value="want">Want</option>
               </select>
+            </div>
+          )}
+
+          {enableLabels && (
+            <div className="space-y-1">
+              <Label>Labels</Label>
+              <LabelCombobox
+                value={form.labels}
+                onChange={(labels) => setForm((s) => ({ ...s, labels }))}
+                allLabels={allLabels ?? []}
+                placeholder="Search or add label…"
+              />
             </div>
           )}
 

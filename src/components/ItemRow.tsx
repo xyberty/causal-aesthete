@@ -2,7 +2,7 @@ import { Pencil, Trash2, CheckCircle2 } from "lucide-react";
 import { Item, PriorityMode, usePlanStore } from "@/store/usePlanStore";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { cn, formatMoney } from "@/lib/utils";
+import { cn, formatAchievedDate, formatMoney } from "@/lib/utils";
 
 export function ItemRow({
   item,
@@ -10,6 +10,7 @@ export function ItemRow({
   priorityMode,
   dragHandleProps,
   dragHandleIcon,
+  showLabels,
 }: {
   item: Item;
   onEdit: (item: Item) => void;
@@ -18,6 +19,8 @@ export function ItemRow({
   dragHandleProps?: { attributes?: object; listeners?: object };
   /** Optional icon shown on the right of the draggable area (e.g. grip) */
   dragHandleIcon?: React.ReactNode;
+  /** When true, show item labels (advanced feature). */
+  showLabels?: boolean;
 }) {
   const toggleAchieved = usePlanStore((s) => s.toggleAchieved);
   const deleteItem = usePlanStore((s) => s.deleteItem);
@@ -39,11 +42,23 @@ export function ItemRow({
               {item.title}
             </div>
             <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-neutral-500">
+              {item.achieved && (
+                <span className="text-neutral-500">Achieved {formatAchievedDate(item.updatedAt)}</span>
+              )}
               <span>{formatMoney(item.price, item.currency)}</span>
               <Badge variant="secondary">
                 {priorityMode === "rank" ? `Rank ${item.priority}` : `Weight ${item.priority}`}
               </Badge>
               <Badge variant="outline">{item.category === "need" ? "Need" : "Want"}</Badge>
+              {showLabels && (item.labels ?? []).length > 0 && (
+                <>
+                  {(item.labels ?? []).map((l) => (
+                    <Badge key={l} variant="outline" className="font-normal text-neutral-500">
+                      {l}
+                    </Badge>
+                  ))}
+                </>
+              )}
             </div>
           </div>
         </div>

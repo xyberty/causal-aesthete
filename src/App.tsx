@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Plus, GripVertical } from "lucide-react";
+import { Plus, GripVertical, X, ListFilterIcon } from "lucide-react";
 import {
   DndContext,
   closestCenter,
@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/dialog";
 import { ItemDialog } from "@/components/ItemDialog";
 import { ItemRow } from "@/components/ItemRow";
+import { Badge } from "@/components/ui/badge";
 import { usePlanStore, type Item, type Category, type PriorityMode, type PlanSettings } from "@/store/usePlanStore";
 import { CURRENCIES, Currency, toCurrency } from "@/lib/currencies";
 import { loadState, saveState } from "@/lib/storage";
@@ -49,8 +50,16 @@ export default function App() {
   const [addCategory, setAddCategory] = useState<"need" | "want" | null>(null);
   const [settingsModal, setSettingsModal] = useState<"plan-config" | "fx-rates" | null>(null);
   const [helpOpen, setHelpOpen] = useState(false);
+  const [filterLabelsNeed, setFilterLabelsNeed] = useState<string[]>([]);
+  const [filterLabelsWant, setFilterLabelsWant] = useState<string[]>([]);
 
   const editing = useMemo(() => items.find((i) => i.id === editingId) ?? null, [items, editingId]);
+
+  const allLabels = useMemo(() => {
+    const set = new Set<string>();
+    items.forEach((i) => (i.labels ?? []).forEach((l) => set.add(l)));
+    return [...set].sort();
+  }, [items]);
 
   function nextPriorityForBottom(cat: Category): number {
     const inCategory = items.filter((i) => i.category === cat && !i.achieved);
@@ -157,6 +166,11 @@ export default function App() {
               }}
               addButtonLabel="Add Need"
               priorityMode={settings.priorityMode}
+              showLabels={settings.enableLabels}
+              filterLabels={filterLabelsNeed}
+              onFilterLabelsChange={setFilterLabelsNeed}
+              onClearFilter={() => setFilterLabelsNeed([])}
+              allLabels={allLabels}
             />
           </TabsContent>
 
@@ -178,6 +192,11 @@ export default function App() {
               }}
               addButtonLabel="Add Wish"
               priorityMode={settings.priorityMode}
+              showLabels={settings.enableLabels}
+              filterLabels={filterLabelsWant}
+              onFilterLabelsChange={setFilterLabelsWant}
+              onClearFilter={() => setFilterLabelsWant([])}
+              allLabels={allLabels}
             />
           </TabsContent>
 
@@ -200,6 +219,8 @@ export default function App() {
           editing={editing}
           defaultCategory={!editing ? addCategory ?? undefined : undefined}
           defaultPriority={defaultPriority}
+          enableLabels={settings.enableLabels}
+          allLabels={allLabels}
         />
 
         <PlanConfigModal
@@ -315,9 +336,19 @@ function PlanConfigModal({
               />
             </div>
           </div>
-          <p className="text-xs text-neutral-500">
-            Budget: {formatMoney(settings.monthlyBudget, base)} / month
-          </p>
+          <Separator className="my-4" />
+          <div className="space-y-2">
+            <div className="text-sm font-medium text-neutral-700">Advanced</div>
+            <label className="flex cursor-pointer items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={settings.enableLabels ?? false}
+                onChange={(e) => setSettings({ enableLabels: e.target.checked })}
+                className="h-4 w-4 rounded border-neutral-300"
+              />
+              Enable labels on items (e.g. family, bike, living-room)
+            </label>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
@@ -474,10 +505,12 @@ function SortableItemRow({
   item,
   onEdit,
   priorityMode,
+  showLabels,
 }: {
   item: Item;
   onEdit: (id: string) => void;
   priorityMode: PriorityMode;
+  showLabels?: boolean;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
   const style = { transform: CSS.Transform.toString(transform), transition };
@@ -489,6 +522,7 @@ function SortableItemRow({
         priorityMode={priorityMode}
         dragHandleProps={{ attributes, listeners }}
         dragHandleIcon={<GripVertical className="h-5 w-5 shrink-0 text-neutral-400" aria-hidden />}
+        showLabels={showLabels}
       />
     </div>
   );
@@ -503,6 +537,11 @@ function ListSection({
   onAdd,
   addButtonLabel,
   priorityMode,
+  showLabels,
+  filterLabels,
+  onFilterLabelsChange,
+  onClearFilter,
+  allLabels,
 }: {
   category: Category;
   title: string;
@@ -512,20 +551,37 @@ function ListSection({
   onAdd?: () => void;
   addButtonLabel?: string;
   priorityMode: PriorityMode;
+  showLabels?: boolean;
+  filterLabels?: string[];
+  onFilterLabelsChange?: (labels: string[]) => void;
+  onClearFilter?: () => void;
+  allLabels?: string[];
 }) {
   const reorderItems = usePlanStore((s) => s.reorderItems);
-  const active = items.filter((i) => !i.achieved);
-  const achieved = items.filter((i) => i.achieved);
+
+  const filteredItems = useMemo(() => {
+    const list = filterLabels?.length && showLabels
+      ? items.filter((i) => {
+          const itemLabels = i.labels ?? [];
+          return filterLabels.every((f) => itemLabels.includes(f));
+        })
+      : items;
+    return list;
+  }, [items, filterLabels, showLabels]);
+
+  const active = filteredItems.filter((i) => !i.achieved);
+  const achieved = filteredItems.filter((i) => i.achieved);
 
   const sorted = useMemo(() => {
-    const activeItems = items.filter((i) => !i.achieved);
+    const activeItems = filteredItems.filter((i) => !i.achieved);
     return [...activeItems].sort((a, b) => {
       if (priorityMode === "rank") return a.priority - b.priority;
       return b.priority - a.priority;
     });
-  }, [items, priorityMode]);
+  }, [filteredItems, priorityMode]);
   const sortedAchieved = [...achieved].sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : -1));
   const sortedIds = useMemo(() => sorted.map((i) => i.id), [sorted]);
+  const hasFilter = showLabels && (filterLabels?.length ?? 0) > 0;
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -549,13 +605,76 @@ function ListSection({
   return (
     <div className="space-y-4">
       <Card>
-        <CardHeader>
-          <CardTitle>{title}</CardTitle>
-          <CardDescription>{description}</CardDescription>
+        <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3">
+          <div>
+            <CardTitle>{title}</CardTitle>
+            <CardDescription>{description}</CardDescription>
+          </div>
+          {showLabels && (
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              <span className="flex items-center gap-1.5 text-xs text-neutral-500">
+                <ListFilterIcon className="h-3.5 w-3.5" />
+              </span>
+              {hasFilter && (filterLabels ?? []).map((l) => (
+                <Badge
+                  key={l}
+                  variant="secondary"
+                  className="flex items-center gap-1 pr-1 text-xs"
+                >
+                  {l}
+                  <button
+                    type="button"
+                    onClick={() =>
+                      onFilterLabelsChange?.(
+                        (filterLabels ?? []).filter((x) => x !== l)
+                      )
+                    }
+                    className="rounded p-0.5 hover:bg-neutral-300"
+                    aria-label={`Remove filter ${l}`}
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))}
+              <select
+                className="h-8 rounded-lg border border-neutral-200 bg-white px-2 text-xs text-neutral-600"
+                value=""
+                onChange={(e) => {
+                  const v = e.target.value;
+                  if (!v) return;
+                  const current = filterLabels ?? [];
+                  if (!current.includes(v)) {
+                    onFilterLabelsChange?.([...current, v].sort());
+                  }
+                  e.target.value = "";
+                }}
+              >
+                <option value="">Choose label…</option>
+                {(allLabels ?? []).filter((l) => !(filterLabels ?? []).includes(l)).map((l) => (
+                  <option key={l} value={l}>
+                    {l}
+                  </option>
+                ))}
+              </select>
+              {hasFilter && (
+                <Button
+                  type="button"
+                  variant={null}
+                  size="sm"
+                  className="h-8 text-xs text-neutral-500"
+                  onClick={onClearFilter}
+                >
+                    <X size={16} />
+                </Button>
+              )}
+            </div>
+          )}
         </CardHeader>
         <CardContent>
           {sorted.length === 0 ? (
-            <div className="text-sm text-neutral-500">No active items.</div>
+            <div className="text-sm text-neutral-500">
+              {hasFilter ? "No items match the filter." : "No active items."}
+            </div>
           ) : (
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
               <SortableContext items={sortedIds} strategy={verticalListSortingStrategy}>
@@ -566,6 +685,7 @@ function ListSection({
                       item={it}
                       onEdit={onEdit}
                       priorityMode={priorityMode}
+                      showLabels={showLabels}
                     />
                   ))}
                 </div>
@@ -579,7 +699,13 @@ function ListSection({
               <div className="mb-2 text-xs text-neutral-500">Achieved</div>
               <div className="space-y-2">
                 {sortedAchieved.map((it) => (
-                  <ItemRow key={it.id} item={it} onEdit={() => onEdit(it.id)} priorityMode={priorityMode} />
+                  <ItemRow
+                    key={it.id}
+                    item={it}
+                    onEdit={() => onEdit(it.id)}
+                    priorityMode={priorityMode}
+                    showLabels={showLabels}
+                  />
                 ))}
               </div>
             </>
