@@ -5,6 +5,7 @@ import {
   closestCenter,
   KeyboardSensor,
   PointerSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   type DragEndEvent,
@@ -19,9 +20,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { ItemDialog } from "@/components/ItemDialog";
 import { ItemRow } from "@/components/ItemRow";
-import { usePlanStore, type Item, type Category, type PriorityMode } from "@/store/usePlanStore";
+import { usePlanStore, type Item, type Category, type PriorityMode, type PlanSettings } from "@/store/usePlanStore";
+import { CURRENCIES, Currency, toCurrency } from "@/lib/currencies";
 import { loadState, saveState } from "@/lib/storage";
 import { buildAcquisitionPlan } from "@/lib/planner";
 import { formatMoney } from "@/lib/utils";
@@ -38,6 +47,8 @@ export default function App() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [addCategory, setAddCategory] = useState<"need" | "want" | null>(null);
+  const [settingsModal, setSettingsModal] = useState<"plan-config" | "fx-rates" | null>(null);
+  const [helpOpen, setHelpOpen] = useState(false);
 
   const editing = useMemo(() => items.find((i) => i.id === editingId) ?? null, [items, editingId]);
 
@@ -86,13 +97,17 @@ export default function App() {
   const base = settings.baseCurrency;
 
   return (
-    <Layout>
+    <Layout
+      openPlanConfig={() => setSettingsModal("plan-config")}
+      openFxRates={() => setSettingsModal("fx-rates")}
+      openHelp={() => setHelpOpen(true)}
+    >
       <div className="space-y-4">
         <Card>
           <CardHeader>
             <CardTitle>Your plan</CardTitle>
             <CardDescription>
-              Needs and wants • monthly budget scheduling from your start date • local-only storage
+              {formatMoney(settings.monthlyBudget, base)} / month • Start {settings.startDate}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -113,82 +128,6 @@ export default function App() {
                 <div className="text-xs text-neutral-500">Planned</div>
                 <div className="text-lg font-semibold">{plannedCount}</div>
               </div>
-            </div>
-
-            <Separator className="my-4" />
-
-            <div className="grid gap-3 sm:grid-cols-3">
-              <div className="space-y-1">
-                <Label>Base currency</Label>
-                <Input
-                  value={settings.baseCurrency}
-                  onChange={(e) => setSettings({ baseCurrency: e.target.value.toUpperCase().trim() || "EUR" })}
-                  placeholder="EUR"
-                />
-              </div>
-              <div className="space-y-1">
-                <Label>Start date</Label>
-                <Input
-                  type="date"
-                  value={settings.startDate}
-                  onChange={(e) => setSettings({ startDate: e.target.value })}
-                />
-              </div>
-              <div className="space-y-1">
-                <Label>Monthly free budget ({base})</Label>
-                <Input
-                  inputMode="decimal"
-                  value={String(settings.monthlyBudget)}
-                  onChange={(e) => setSettings({ monthlyBudget: Number(e.target.value || 0) })}
-                  placeholder="0"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <Label>Carryover</Label>
-                <select
-                  className="h-10 w-full rounded-xl border border-neutral-200 bg-white px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300"
-                  value={settings.carryover ? "yes" : "no"}
-                  onChange={(e) => setSettings({ carryover: e.target.value === "yes" })}
-                >
-                  <option value="yes">Yes (unused budget rolls)</option>
-                  <option value="no">No (reset each month)</option>
-                </select>
-              </div>
-
-              <div className="space-y-1">
-                <Label>Priority mode</Label>
-                <select
-                  className="h-10 w-full rounded-xl border border-neutral-200 bg-white px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300"
-                  value={settings.priorityMode}
-                  onChange={(e) => setSettings({ priorityMode: e.target.value as any })}
-                >
-                  <option value="rank">Rank (1 is highest)</option>
-                  <option value="weight">Weight (higher is better)</option>
-                </select>
-              </div>
-
-              <div className="space-y-1">
-                <Label>Need:Want ratio</Label>
-                <div className="flex gap-2">
-                  <Input
-                    inputMode="numeric"
-                    value={String(settings.fairnessRatioNeeds)}
-                    onChange={(e) => setSettings({ fairnessRatioNeeds: Math.max(1, Number(e.target.value || 1)) })}
-                    placeholder="2"
-                  />
-                  <Input
-                    inputMode="numeric"
-                    value={String(settings.fairnessRatioWants)}
-                    onChange={(e) => setSettings({ fairnessRatioWants: Math.max(1, Number(e.target.value || 1)) })}
-                    placeholder="1"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-4 text-xs text-neutral-500">
-              Budget: {formatMoney(settings.monthlyBudget, base)} / month
             </div>
           </CardContent>
         </Card>
@@ -243,9 +182,6 @@ export default function App() {
           </TabsContent>
 
           <TabsContent value="plan">
-            <div className="mt-2">
-              <PlanTabHint />
-            </div>
             <div className="mt-4">
               <PlanView />
             </div>
@@ -265,29 +201,272 @@ export default function App() {
           defaultCategory={!editing ? addCategory ?? undefined : undefined}
           defaultPriority={defaultPriority}
         />
+
+        <PlanConfigModal
+          open={settingsModal === "plan-config"}
+          onOpenChange={(open) => !open && setSettingsModal(null)}
+          settings={settings}
+          setSettings={setSettings}
+        />
+        <FxRatesModal
+          open={settingsModal === "fx-rates"}
+          onOpenChange={(open) => !open && setSettingsModal(null)}
+          baseCurrency={base}
+          fxRates={settings.fxRates ?? {}}
+          onRatesChange={(fxRates) => setSettings({ fxRates })}
+        />
+        <HelpModal open={helpOpen} onOpenChange={setHelpOpen} />
       </div>
     </Layout>
   );
 }
 
-function PlanTabHint() {
+function PlanConfigModal({
+  open,
+  onOpenChange,
+  settings,
+  setSettings,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  settings: PlanSettings;
+  setSettings: (patch: Partial<PlanSettings>) => void;
+}) {
+  const base = settings.baseCurrency;
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>How monthly planning works</CardTitle>
-        <CardDescription>
-          Each month adds your free budget (starting from the start date). The planner picks affordable items using a fair
-          need/want ratio, with carryover optional.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Plan configuration</DialogTitle>
+          <DialogDescription>
+            Base currency, budget, start date, and how needs vs wants are balanced.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="mt-4 space-y-4">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1">
+              <Label>Base currency</Label>
+              <select
+                className="h-10 w-full rounded-xl border border-neutral-200 bg-white px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300"
+                value={toCurrency(settings.baseCurrency)}
+                onChange={(e) => setSettings({ baseCurrency: e.target.value as Currency })}
+              >
+                {CURRENCIES.map((ccy) => (
+                  <option key={ccy} value={ccy}>
+                    {ccy}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-1">
+              <Label>Start date</Label>
+              <Input
+                type="date"
+                value={settings.startDate}
+                onChange={(e) => setSettings({ startDate: e.target.value })}
+              />
+            </div>
+          </div>
+          <div className="space-y-1">
+            <Label>Monthly free budget ({base})</Label>
+            <Input
+              inputMode="decimal"
+              value={String(settings.monthlyBudget)}
+              onChange={(e) => setSettings({ monthlyBudget: Number(e.target.value || 0) })}
+              placeholder="0"
+            />
+          </div>
+          <div className="space-y-1">
+            <Label>Carryover</Label>
+            <select
+              className="h-10 w-full rounded-xl border border-neutral-200 bg-white px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300"
+              value={settings.carryover ? "yes" : "no"}
+              onChange={(e) => setSettings({ carryover: e.target.value === "yes" })}
+            >
+              <option value="yes">Yes (unused budget rolls)</option>
+              <option value="no">No (reset each month)</option>
+            </select>
+          </div>
+          <div className="space-y-1">
+            <Label>Priority mode</Label>
+            <select
+              className="h-10 w-full rounded-xl border border-neutral-200 bg-white px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300"
+              value={settings.priorityMode}
+              onChange={(e) => setSettings({ priorityMode: e.target.value as PriorityMode })}
+            >
+              <option value="rank">Rank (1 is highest)</option>
+              <option value="weight">Weight (higher is better)</option>
+            </select>
+          </div>
+          <div className="space-y-1">
+            <Label>Need:Want ratio</Label>
+            <div className="flex gap-2">
+              <Input
+                inputMode="numeric"
+                value={String(settings.fairnessRatioNeeds)}
+                onChange={(e) => setSettings({ fairnessRatioNeeds: Math.max(1, Number(e.target.value || 1)) })}
+                placeholder="2"
+              />
+              <Input
+                inputMode="numeric"
+                value={String(settings.fairnessRatioWants)}
+                onChange={(e) => setSettings({ fairnessRatioWants: Math.max(1, Number(e.target.value || 1)) })}
+                placeholder="1"
+              />
+            </div>
+          </div>
+          <p className="text-xs text-neutral-500">
+            Budget: {formatMoney(settings.monthlyBudget, base)} / month
+          </p>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function FxRatesModal({
+  open,
+  onOpenChange,
+  baseCurrency,
+  fxRates,
+  onRatesChange,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  baseCurrency: string;
+  fxRates: Record<string, number>;
+  onRatesChange: (rates: Record<string, number>) => void;
+}) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>FX rates</DialogTitle>
+          <DialogDescription>
+            Manual rates to convert other currencies to base ({baseCurrency}). 1 unit of currency = ? {baseCurrency}. Offline only.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="mt-4">
+          <FxRatesEditor
+            baseCurrency={baseCurrency}
+            fxRates={fxRates}
+            onRatesChange={onRatesChange}
+          />
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function FxRatesEditor({
+  baseCurrency,
+  fxRates,
+  onRatesChange,
+}: {
+  baseCurrency: string;
+  fxRates: Record<string, number>;
+  onRatesChange: (rates: Record<string, number>) => void;
+}) {
+  const [newCcy, setNewCcy] = useState<Currency | "">("");
+  const [newRate, setNewRate] = useState("");
+
+  const addRate = () => {
+    if (!newCcy || newCcy === baseCurrency) return;
+    const rate = Number(newRate);
+    if (!Number.isFinite(rate) || rate <= 0) return;
+    onRatesChange({ ...fxRates, [newCcy]: rate });
+    setNewCcy("");
+    setNewRate("");
+  };
+
+  const removeRate = (ccy: string) => {
+    const next = { ...fxRates };
+    delete next[ccy];
+    onRatesChange(next);
+  };
+
+  const updateRate = (ccy: string, value: number) => {
+    if (!Number.isFinite(value) || value <= 0) return;
+    onRatesChange({ ...fxRates, [ccy]: value });
+  };
+
+  const entries = Object.entries(fxRates).filter(([ccy]) => ccy !== baseCurrency);
+  const currenciesForRate = CURRENCIES.filter((c) => c !== baseCurrency);
+
+  return (
+    <div className="space-y-2">
+      <div className="flex flex-wrap items-end gap-2">
+        <div className="space-y-1">
+          <Label className="text-xs">Currency</Label>
+          <select
+            className="h-10 w-24 rounded-xl border border-neutral-200 bg-white px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300"
+            value={newCcy}
+            onChange={(e) => setNewCcy(e.target.value ? (e.target.value as Currency) : "")}
+          >
+            <option value="">—</option>
+            {currenciesForRate.map((ccy) => (
+              <option key={ccy} value={ccy}>
+                {ccy}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs">Rate (1 = ? {baseCurrency})</Label>
+          <Input
+            className="w-24"
+            inputMode="decimal"
+            placeholder="0.92"
+            value={newRate}
+            onChange={(e) => setNewRate(e.target.value)}
+          />
+        </div>
+        <Button type="button" variant="secondary" size="sm" onClick={addRate}>
+          Add rate
+        </Button>
+      </div>
+      {entries.length > 0 && (
+        <ul className="space-y-1 rounded-xl border border-neutral-200 p-2">
+          {entries.map(([ccy, rate]) => (
+            <li key={ccy} className="flex items-center justify-between gap-2 text-sm">
+              <span className="font-medium">1 {ccy}</span>
+              <span className="text-neutral-500">=</span>
+              <Input
+                className="h-8 w-24"
+                inputMode="decimal"
+                value={rate}
+                onChange={(e) => updateRate(ccy, Number(e.target.value))}
+              />
+              <span className="text-neutral-500">{baseCurrency}</span>
+              <Button type="button" variant="ghost" size="sm" className="h-8 px-2" onClick={() => removeRate(ccy)}>
+                Remove
+              </Button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function HelpModal({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>How monthly planning works</DialogTitle>
+          <DialogDescription>
+            Each month adds your free budget (starting from the start date). The planner picks affordable items using a
+            fair need/want ratio, with carryover optional.
+          </DialogDescription>
+        </DialogHeader>
         <ul className="list-disc space-y-1 pl-5 text-sm text-neutral-600">
           <li>Only non-achieved items are considered.</li>
-          <li>Only items in base currency are planned.</li>
+          <li>Items in base currency are planned; others use manual FX rates (Settings) to convert to base.</li>
           <li>Needs are favored but wants are interleaved (ratio control).</li>
         </ul>
-      </CardContent>
-    </Card>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -308,16 +487,8 @@ function SortableItemRow({
         item={item}
         onEdit={() => onEdit(item.id)}
         priorityMode={priorityMode}
-        dragHandle={
-          <div
-            {...attributes}
-            {...listeners}
-            className="shrink-0 cursor-grab touch-none rounded p-0.5 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600 active:cursor-grabbing"
-            aria-label="Drag to reorder"
-          >
-            <GripVertical className="h-5 w-5" />
-          </div>
-        }
+        dragHandleProps={{ attributes, listeners }}
+        dragHandleIcon={<GripVertical className="h-5 w-5 shrink-0 text-neutral-400" aria-hidden />}
       />
     </div>
   );
@@ -358,6 +529,7 @@ function ListSection({
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 8 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 

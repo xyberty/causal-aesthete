@@ -5,8 +5,11 @@ export type PlannedItem = {
   id: string;
   title: string;
   category: "need" | "want";
+  /** Price in base currency (used for planning) */
   price: number;
   currency: string;
+  /** Original price when item was in another currency (for display) */
+  originalPrice?: number;
   priority: number;
   achieved: boolean;
   score: number;
@@ -33,14 +36,28 @@ export type AcquisitionPlan = {
   remainingUnplanned: PlannedItem[];
 };
 
-function desirabilityScore(item: Item, settings: PlanSettings, maxRank: number) {
+/** Convert amount to base currency. Returns null if no rate (exclude from plan). */
+function toBaseAmount(
+  price: number,
+  currency: string,
+  baseCurrency: string,
+  fxRates: Record<string, number>
+): number | null {
+  if (currency === baseCurrency) return price;
+  const rate = fxRates[currency];
+  if (rate == null || rate <= 0 || !Number.isFinite(rate)) return null;
+  const converted = price * rate;
+  return Number.isFinite(converted) ? converted : null;
+}
+
+function desirabilityScore(priceInBase: number, priority: number, settings: PlanSettings, maxRank: number) {
   const alpha = settings.alphaPricePenalty ?? 0.35;
   const raw =
     settings.priorityMode === "rank"
-      ? Math.max(1, (maxRank + 1) - item.priority)
-      : Math.max(0, item.priority);
+      ? Math.max(1, (maxRank + 1) - priority)
+      : Math.max(0, priority);
 
-  const p = Math.max(0.01, item.price);
+  const p = Math.max(0.01, priceInBase);
   return raw / Math.pow(p, alpha);
 }
 
@@ -72,49 +89,60 @@ export function buildAcquisitionPlan(items: Item[], settings: PlanSettings): Acq
   const carryover = !!settings.carryover;
 
   const active = items.filter((it) => !it.achieved);
-  const achieved = items.filter((it) => it.achieved); // not used in planning
+  const fxRates = settings.fxRates ?? {};
 
-  // currency handling: plan only baseCurrency items
-  const eligible = active.filter((it) => it.currency === baseCurrency);
-  const excluded = active.filter((it) => it.currency !== baseCurrency).map((it) => ({
-    id: it.id,
-    title: it.title,
-    category: it.category,
-    price: it.price,
-    currency: it.currency,
-    priority: it.priority,
-    achieved: it.achieved,
-    score: 0,
-  }));
+  // Convert to base: include items in base currency or with a manual FX rate
+  type WithBase = { item: Item; priceInBase: number };
+  const withBase: WithBase[] = [];
+  const excluded: PlannedItem[] = [];
 
-  const needs = eligible.filter((it) => it.category === "need");
-  const wants = eligible.filter((it) => it.category === "want");
+  for (const it of active) {
+    const priceInBase = toBaseAmount(it.price, it.currency, baseCurrency, fxRates);
+    if (priceInBase !== null) {
+      withBase.push({ item: it, priceInBase });
+    } else {
+      excluded.push({
+        id: it.id,
+        title: it.title,
+        category: it.category,
+        price: it.price,
+        currency: it.currency,
+        priority: it.priority,
+        achieved: it.achieved,
+        score: 0,
+      });
+    }
+  }
 
-  // Determine maxRank for score conversion
+  const needs = withBase.filter((w) => w.item.category === "need");
+  const wants = withBase.filter((w) => w.item.category === "want");
+
   const maxRank = settings.priorityMode === "rank"
-    ? Math.max(1, ...eligible.map((i) => i.priority || 1))
+    ? Math.max(1, ...withBase.map((w) => w.item.priority || 1))
     : 1;
 
-  let needsPool: PlannedItem[] = needs.map((it) => ({
+  let needsPool: PlannedItem[] = needs.map(({ item: it, priceInBase }) => ({
     id: it.id,
     title: it.title,
     category: it.category,
-    price: it.price,
+    price: priceInBase,
     currency: it.currency,
+    ...(it.currency !== baseCurrency && { originalPrice: it.price }),
     priority: it.priority,
     achieved: it.achieved,
-    score: desirabilityScore(it, settings, maxRank),
+    score: desirabilityScore(priceInBase, it.priority, settings, maxRank),
   })).sort(sortByScoreDesc);
 
-  let wantsPool: PlannedItem[] = wants.map((it) => ({
+  let wantsPool: PlannedItem[] = wants.map(({ item: it, priceInBase }) => ({
     id: it.id,
     title: it.title,
     category: it.category,
-    price: it.price,
+    price: priceInBase,
     currency: it.currency,
+    ...(it.currency !== baseCurrency && { originalPrice: it.price }),
     priority: it.priority,
     achieved: it.achieved,
-    score: desirabilityScore(it, settings, maxRank),
+    score: desirabilityScore(priceInBase, it.priority, settings, maxRank),
   })).sort(sortByScoreDesc);
 
   const ratioNeeds = Math.max(1, settings.fairnessRatioNeeds || 2);

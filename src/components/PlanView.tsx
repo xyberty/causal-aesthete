@@ -101,6 +101,11 @@ export function PlanView() {
                           <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-neutral-500">
                             <Badge variant="outline">{p.category === "need" ? "Need" : "Want"}</Badge>
                             <span>{formatMoney(p.price, plan.baseCurrency)}</span>
+                            {p.originalPrice != null && (
+                              <span className="text-neutral-400">
+                                (≈ {formatMoney(p.originalPrice, p.currency)})
+                              </span>
+                            )}
                           </div>
                         </div>
                       </div>

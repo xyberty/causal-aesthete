@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Item, Category, usePlanStore } from "@/store/usePlanStore";
+import { CURRENCIES, toCurrency } from "@/lib/currencies";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,7 +17,7 @@ function toForm(item?: Item): FormState {
   return {
     title: item?.title ?? "",
     price: item ? String(item.price) : "",
-    currency: item?.currency ?? "EUR",
+    currency: item ? toCurrency(item.currency) : "EUR",
     category: item?.category ?? "need",
   };
 }
@@ -72,7 +73,7 @@ export function ItemDialog({
     const payload = {
       title: parsed.title,
       price: parsed.price,
-      currency: form.currency.trim().toUpperCase() || "EUR",
+      currency: toCurrency(form.currency.trim().toUpperCase() || "EUR"),
       category: form.category,
       priority,
       achieved: editing?.achieved ?? false,
@@ -113,11 +114,17 @@ export function ItemDialog({
             </div>
             <div className="space-y-1">
               <Label>Currency</Label>
-              <Input
-                value={form.currency}
+              <select
+                className="h-10 w-full rounded-xl border border-neutral-200 bg-white px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300"
+                value={toCurrency(form.currency)}
                 onChange={(e) => setForm((s) => ({ ...s, currency: e.target.value }))}
-                placeholder="EUR"
-              />
+              >
+                {CURRENCIES.map((ccy) => (
+                  <option key={ccy} value={ccy}>
+                    {ccy}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 

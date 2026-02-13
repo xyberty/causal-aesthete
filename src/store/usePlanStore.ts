@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { DEFAULT_CURRENCY, toCurrency } from "@/lib/currencies";
 
 export type Category = "need" | "want";
 
@@ -19,6 +20,7 @@ export type Item = {
 };
 
 export type PlanSettings = {
+  /** One of the supported currencies (see Currency enum). */
   baseCurrency: string;
   startDate: string; // YYYY-MM-DD
   monthlyBudget: number; // in baseCurrency
@@ -28,6 +30,8 @@ export type PlanSettings = {
   fairnessRatioWants: number; // e.g., 1
   maxMonths: number; // safety horizon
   alphaPricePenalty: number; // desirability / price^alpha
+  /** Manual FX rates: 1 unit of key = value in base. Use supported Currency codes. */
+  fxRates: Record<string, number>;
 };
 
 export type AppState = {
@@ -64,7 +68,7 @@ export const defaultState: AppState = {
   version: 1,
   items: [],
   settings: {
-    baseCurrency: "EUR",
+    baseCurrency: DEFAULT_CURRENCY,
     startDate: new Date().toISOString().slice(0, 10),
     monthlyBudget: 0,
     carryover: true,
@@ -73,6 +77,7 @@ export const defaultState: AppState = {
     fairnessRatioWants: 1,
     maxMonths: 36,
     alphaPricePenalty: 0.35,
+    fxRates: {},
   },
 };
 
@@ -132,10 +137,13 @@ export const usePlanStore = create<PlanStore>((set, get) => ({
   importState: (state) => {
     // minimal validation / migration point
     if (!state || state.version !== 1) return;
+    const merged = { ...defaultState.settings, ...(state.settings ?? {}) };
+    merged.baseCurrency = toCurrency(merged.baseCurrency);
+    if (!merged.fxRates || typeof merged.fxRates !== "object") merged.fxRates = {};
     set({
       version: 1,
       items: Array.isArray(state.items) ? state.items : [],
-      settings: { ...defaultState.settings, ...(state.settings ?? {}) },
+      settings: merged,
     });
   },
 

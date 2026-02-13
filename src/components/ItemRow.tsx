@@ -8,22 +8,23 @@ export function ItemRow({
   item,
   onEdit,
   priorityMode,
-  dragHandle,
+  dragHandleProps,
+  dragHandleIcon,
 }: {
   item: Item;
   onEdit: (item: Item) => void;
   priorityMode: PriorityMode;
-  /** Optional drag handle (e.g. for sortable list) */
-  dragHandle?: React.ReactNode;
+  /** When set, the main content area is draggable (for sortable lists) */
+  dragHandleProps?: { attributes?: object; listeners?: object };
+  /** Optional icon shown on the right of the draggable area (e.g. grip) */
+  dragHandleIcon?: React.ReactNode;
 }) {
   const toggleAchieved = usePlanStore((s) => s.toggleAchieved);
   const deleteItem = usePlanStore((s) => s.deleteItem);
 
-  return (
-    <div className="flex items-start justify-between gap-3 rounded-xl border border-neutral-200 p-3">
-      <div className="min-w-0 flex-1 flex items-start gap-2">
-        {dragHandle}
-        <div className="min-w-0 flex-1">
+  const content = (
+    <div className="min-w-0 flex-1 flex items-start gap-2">
+      <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <button
             className="mt-0.5 text-neutral-500 hover:text-neutral-900"
@@ -46,10 +47,26 @@ export function ItemRow({
             </div>
           </div>
         </div>
-        </div>
       </div>
+    </div>
+  );
 
-      <div className="flex shrink-0 gap-2">
+  return (
+    <div className="flex items-start justify-between gap-3 rounded-xl border border-neutral-200 p-3">
+      {dragHandleProps ? (
+        <div
+          {...(dragHandleProps.attributes ?? {})}
+          {...(dragHandleProps.listeners ?? {})}
+          className="min-w-0 flex-1 flex items-center gap-2 cursor-grab touch-none active:cursor-grabbing rounded-lg -m-1 p-1"
+          aria-label="Drag to reorder"
+        >
+          {content}
+        </div>
+      ) : (
+        content
+      )}
+
+      <div className="flex shrink-0 gap-2 items-center">
         <Button variant="outline" size="icon" onClick={() => onEdit(item)} aria-label="Edit">
           <Pencil className="h-4 w-4" />
         </Button>
@@ -63,7 +80,8 @@ export function ItemRow({
         >
           <Trash2 className="h-4 w-4" />
         </Button>
-      </div>
+        {dragHandleIcon}
+        </div>
     </div>
   );
 }

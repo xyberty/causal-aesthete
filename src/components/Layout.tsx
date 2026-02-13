@@ -12,7 +12,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { usePlanStore } from "@/store/usePlanStore";
 
-export function Layout({ children }: { children: ReactNode }) {
+export type LayoutProps = {
+  children: ReactNode;
+  openPlanConfig?: () => void;
+  openFxRates?: () => void;
+  openHelp?: () => void;
+};
+
+export function Layout({ children, openPlanConfig, openFxRates, openHelp }: LayoutProps) {
   const resetAll = usePlanStore((s) => s.resetAll);
 
   return (
@@ -36,6 +43,25 @@ export function Layout({ children }: { children: ReactNode }) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+              {(openPlanConfig != null || openFxRates != null) && (
+                <>
+                  <DropdownMenuLabel>Settings</DropdownMenuLabel>
+                  {openPlanConfig != null && (
+                    <DropdownMenuItem onSelect={openPlanConfig}>Plan configuration…</DropdownMenuItem>
+                  )}
+                  {openFxRates != null && (
+                    <DropdownMenuItem onSelect={openFxRates}>FX rates…</DropdownMenuItem>
+                  )}
+                  <DropdownMenuSeparator />
+                </>
+              )}
+              {openHelp != null && (
+                <>
+                  <DropdownMenuLabel>Help</DropdownMenuLabel>
+                  <DropdownMenuItem onSelect={openHelp}>How it works?</DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                </>
+              )}
               <DropdownMenuLabel>Data</DropdownMenuLabel>
               <ImportExport />
               <DropdownMenuSeparator />
