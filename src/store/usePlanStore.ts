@@ -94,7 +94,7 @@ export const defaultState: AppState = {
   },
 };
 
-export const usePlanStore = create<PlanStore>((set, get) => ({
+export const usePlanStore = create<PlanStore>((set, _get) => ({
   ...defaultState,
   hydrated: false,
   setHydrated: (v) => set({ hydrated: v }),

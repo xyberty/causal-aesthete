@@ -55,12 +55,23 @@ export function ItemDialog({
   const items = usePlanStore((s) => s.items);
   const settings = usePlanStore((s) => s.settings);
 
-  const [form, setForm] = useState<FormState>(() => toForm(editing ?? undefined));
-  useEffect(() => {
+  const [form, setForm] = useState<FormState>(() => {
     const base = editing ?? undefined;
     const initial = toForm(base);
     if (!base && defaultCategory) initial.category = defaultCategory;
-    setForm(initial);
+    return initial;
+  });
+  
+  useEffect(() => {
+    if (!open) return;
+    const base = editing ?? undefined;
+    const initial = toForm(base);
+    if (!base && defaultCategory) initial.category = defaultCategory;
+    // Use setTimeout to avoid synchronous setState in effect
+    const timeoutId = setTimeout(() => {
+      setForm(initial);
+    }, 0);
+    return () => clearTimeout(timeoutId);
   }, [editing, open, defaultCategory]);
 
   const isEdit = !!editing;
@@ -93,7 +104,7 @@ export function ItemDialog({
           ? defaultPriority
           : 1;
 
-    const payload: any = {
+    const payload: Partial<Omit<Item, "id" | "createdAt">> = {
       title: parsed.title,
       price: parsed.price,
       currency: toCurrency(form.currency.trim().toUpperCase() || "EUR"),

@@ -7,7 +7,7 @@ import { cn, formatAchievedDate, formatMoney } from "@/lib/utils";
 export function ItemRow({
   item,
   onEdit,
-  priorityMode,
+  priorityMode: _priorityMode,
   dragHandleProps,
   dragHandleIcon,
   showLabels,

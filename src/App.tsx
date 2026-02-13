@@ -30,7 +30,7 @@ import {
 import { ItemDialog } from "@/components/ItemDialog";
 import { ItemRow } from "@/components/ItemRow";
 import { Badge } from "@/components/ui/badge";
-import { usePlanStore, type Item, type Category, type PriorityMode, type PlanSettings } from "@/store/usePlanStore";
+import { usePlanStore, type Item, type Category, type PriorityMode, type PlanSettings, type AppState } from "@/store/usePlanStore";
 import { CURRENCIES, Currency, toCurrency } from "@/lib/currencies";
 import { loadState, saveState } from "@/lib/storage";
 import { buildAcquisitionPlan } from "@/lib/planner";
@@ -74,7 +74,7 @@ export default function App() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const saved = await loadState<any>();
+      const saved = await loadState<AppState>();
       if (!cancelled && saved) {
         importState(saved);
       }
@@ -578,7 +578,6 @@ function ListSection({
     return list;
   }, [items, filterLabels, showLabels]);
 
-  const active = filteredItems.filter((i) => !i.achieved);
   const achieved = filteredItems.filter((i) => i.achieved);
 
   const sorted = useMemo(() => {

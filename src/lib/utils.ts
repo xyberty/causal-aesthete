@@ -57,7 +57,7 @@ export function formatAchievedDate(isoString: string): string {
 export function getAvailableMonths(
   planMonths: string[],
   startDate: string,
-  maxMonths: number
+  _maxMonths: number
 ): string[] {
   const monthSet = new Set<string>(planMonths);
   

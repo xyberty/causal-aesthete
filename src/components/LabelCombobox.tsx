@@ -63,7 +63,11 @@ export function LabelCombobox({
 
   useEffect(() => {
     if (!open) return;
-    setHighlightIndex(0);
+    // Use setTimeout to avoid synchronous setState in effect
+    const timeoutId = setTimeout(() => {
+      setHighlightIndex(0);
+    }, 0);
+    return () => clearTimeout(timeoutId);
   }, [open, query]);
 
   useEffect(() => {
