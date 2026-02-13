@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LabelCombobox } from "@/components/LabelCombobox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { buildAcquisitionPlan } from "@/lib/planner";
+import { getAvailableMonths } from "@/lib/utils";
 
 type FormState = {
   title: string;
@@ -13,6 +15,7 @@ type FormState = {
   currency: string;
   category: Category;
   labels: string[];
+  targetMonthKey: string;
 };
 
 function toForm(item?: Item): FormState {
@@ -22,6 +25,7 @@ function toForm(item?: Item): FormState {
     currency: item ? toCurrency(item.currency) : "EUR",
     category: item?.category ?? "need",
     labels: item?.labels ? [...item.labels] : [],
+    targetMonthKey: item?.targetMonthKey ?? "",
   };
 }
 
@@ -48,6 +52,8 @@ export function ItemDialog({
 }) {
   const addItem = usePlanStore((s) => s.addItem);
   const updateItem = usePlanStore((s) => s.updateItem);
+  const items = usePlanStore((s) => s.items);
+  const settings = usePlanStore((s) => s.settings);
 
   const [form, setForm] = useState<FormState>(() => toForm(editing ?? undefined));
   useEffect(() => {
@@ -59,11 +65,19 @@ export function ItemDialog({
 
   const isEdit = !!editing;
 
+  // Get available months for target month selection
+  const availableMonths = useMemo(() => {
+    const plan = buildAcquisitionPlan(items, settings);
+    const planMonthKeys = plan.months.map((m) => m.monthKey);
+    return getAvailableMonths(planMonthKeys, settings.startDate, settings.maxMonths ?? 36);
+  }, [items, settings]);
+
   const parsed = useMemo(() => {
     const price = Number(form.price);
     return {
       title: form.title.trim(),
       price: Number.isFinite(price) ? price : NaN,
+      targetMonthKey: form.targetMonthKey || undefined,
     };
   }, [form]);
 
@@ -79,7 +93,7 @@ export function ItemDialog({
           ? defaultPriority
           : 1;
 
-    const payload = {
+    const payload: any = {
       title: parsed.title,
       price: parsed.price,
       currency: toCurrency(form.currency.trim().toUpperCase() || "EUR"),
@@ -88,6 +102,17 @@ export function ItemDialog({
       achieved: editing?.achieved ?? false,
       ...(enableLabels && { labels: form.labels }),
     };
+    
+    // Explicitly set targetMonthKey to undefined if cleared, or set it if provided
+    if (editing) {
+      // When editing, always include targetMonthKey (even if undefined to clear it)
+      payload.targetMonthKey = parsed.targetMonthKey || undefined;
+    } else {
+      // When adding, only include if set
+      if (parsed.targetMonthKey) {
+        payload.targetMonthKey = parsed.targetMonthKey;
+      }
+    }
 
     if (editing) updateItem(editing.id, payload);
     else addItem(payload);
@@ -163,6 +188,25 @@ export function ItemDialog({
               />
             </div>
           )}
+
+          <div className="space-y-1">
+            <Label>Target month (optional)</Label>
+            <select
+              className="h-10 w-full rounded-xl border border-neutral-200 bg-white px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300"
+              value={form.targetMonthKey}
+              onChange={(e) => setForm((s) => ({ ...s, targetMonthKey: e.target.value }))}
+            >
+              <option value="">No target month (automatic)</option>
+              {availableMonths.map((monthKey) => (
+                <option key={monthKey} value={monthKey}>
+                  {monthKey}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-neutral-500 mt-1">
+              Items with a target month are prioritized and placed in that specific month if affordable.
+            </p>
+          </div>
 
           <div className="flex items-center justify-end gap-2 pt-2">
             <Button variant="secondary" onClick={() => onOpenChange(false)}>

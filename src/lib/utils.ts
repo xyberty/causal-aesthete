@@ -52,3 +52,39 @@ export function formatAchievedDate(isoString: string): string {
     return isoString.slice(0, 10);
   }
 }
+
+/** Get available months for target month selection: plan months + 3 months after last calculated month. */
+export function getAvailableMonths(
+  planMonths: string[],
+  startDate: string,
+  maxMonths: number
+): string[] {
+  const monthSet = new Set<string>(planMonths);
+  
+  // Find the last month in the plan
+  let lastMonth: Date | null = null;
+  if (planMonths.length > 0) {
+    const sorted = [...planMonths].sort();
+    const lastKey = sorted[sorted.length - 1];
+    const [year, month] = lastKey.split("-").map(Number);
+    lastMonth = new Date(year, month - 1, 1);
+  } else {
+    // If no plan months, start from startDate
+    lastMonth = new Date(startDate + "T00:00:00");
+  }
+  
+  // Add 3 months after the last calculated month
+  for (let i = 1; i <= 3; i++) {
+    const nextMonth = addMonths(lastMonth, i);
+    monthSet.add(ymKeyFromDate(nextMonth));
+  }
+  
+  // Also ensure we include months from startDate up to maxMonths
+  // const start = new Date(startDate + "T00:00:00");
+  // for (let m = 0; m < maxMonths; m++) {
+  //   const monthDate = addMonths(start, m);
+  //   monthSet.add(ymKeyFromDate(monthDate));
+  // }
+  
+  return [...monthSet].sort();
+}

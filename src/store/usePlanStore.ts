@@ -18,6 +18,8 @@ export type Item = {
   achieved: boolean;
   /** When achieved: first unspent month this item fits into (YYYY-MM). Plan is recalculated around it. */
   achievedInMonthKey?: string;
+  /** Target month when item should be achieved (gifted/bought). Manual items with targetMonthKey rank above automatic items. */
+  targetMonthKey?: string;
   /** User-assigned labels (e.g. family, bike). Only used when settings.enableLabels is true. */
   labels?: string[];
   createdAt: string; // ISO
@@ -39,6 +41,8 @@ export type PlanSettings = {
   fxRates: Record<string, number>;
   /** Advanced: enable labels on items (e.g. family, bike, living-room). */
   enableLabels?: boolean;
+  /** Advanced: allow manual items with target month to exceed monthly budget. */
+  allowBudgetExceed?: boolean;
 };
 
 export type AppState = {
@@ -86,6 +90,7 @@ export const defaultState: AppState = {
     alphaPricePenalty: 0.35,
     fxRates: {},
     enableLabels: false,
+    allowBudgetExceed: false,
   },
 };
 
@@ -158,10 +163,11 @@ export const usePlanStore = create<PlanStore>((set, get) => ({
     merged.baseCurrency = toCurrency(merged.baseCurrency);
     if (!merged.fxRates || typeof merged.fxRates !== "object") merged.fxRates = {};
     if (merged.enableLabels === undefined) merged.enableLabels = false;
+    if (merged.allowBudgetExceed === undefined) merged.allowBudgetExceed = false;
     const items = Array.isArray(state.items) ? state.items : [];
     set({
       version: 1,
-      items: items.map((it) => ({ ...it, labels: it.labels ?? [] })),
+      items: items.map((it) => ({ ...it, labels: it.labels ?? [], targetMonthKey: it.targetMonthKey })),
       settings: merged,
     });
   },

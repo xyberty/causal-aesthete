@@ -348,6 +348,15 @@ function PlanConfigModal({
               />
               Enable labels on items (e.g. family, bike, living-room)
             </label>
+            <label className="flex cursor-pointer items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={settings.allowBudgetExceed ?? false}
+                onChange={(e) => setSettings({ allowBudgetExceed: e.target.checked })}
+                className="h-4 w-4 rounded border-neutral-300"
+              />
+              Allow monthly budget exceed (manual items with target month can exceed budget)
+            </label>
           </div>
         </div>
       </DialogContent>
@@ -695,8 +704,7 @@ function ListSection({
 
           {sortedAchieved.length > 0 && (
             <>
-              <Separator className="my-4" />
-              <div className="mb-2 text-xs text-neutral-500">Achieved</div>
+              <div className="mt-4 mb-2 text-xs text-neutral-500">Achieved</div>
               <div className="space-y-2">
                 {sortedAchieved.map((it) => (
                   <ItemRow

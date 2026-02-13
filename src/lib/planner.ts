@@ -13,6 +13,8 @@ export type PlannedItem = {
   priority: number;
   achieved: boolean;
   score: number;
+  /** Target month when item should be achieved (for manual items) */
+  targetMonthKey?: string;
 };
 
 export type PlanMonth = {
@@ -164,14 +166,57 @@ export function buildAcquisitionPlan(items: Item[], settings: PlanSettings): Acq
     }
   }
 
-  const needs = withBase.filter((w) => w.item.category === "need");
-  const wants = withBase.filter((w) => w.item.category === "want");
+  // Separate items with targetMonthKey (manual) from automatic items
+  const needsWithTarget = withBase.filter((w) => w.item.category === "need" && w.item.targetMonthKey);
+  const wantsWithTarget = withBase.filter((w) => w.item.category === "want" && w.item.targetMonthKey);
+  const needsAuto = withBase.filter((w) => w.item.category === "need" && !w.item.targetMonthKey);
+  const wantsAuto = withBase.filter((w) => w.item.category === "want" && !w.item.targetMonthKey);
 
   const maxRank = settings.priorityMode === "rank"
     ? Math.max(1, ...withBase.map((w) => w.item.priority || 1))
     : 1;
 
-  let needsPool: PlannedItem[] = needs.map(({ item: it, priceInBase }) => ({
+  // Manual items (with targetMonthKey) - these get highest priority
+  const manualNeedsByMonth: Record<string, PlannedItem[]> = {};
+  for (const { item: it, priceInBase } of needsWithTarget) {
+    const monthKey = it.targetMonthKey!;
+    if (!manualNeedsByMonth[monthKey]) manualNeedsByMonth[monthKey] = [];
+    manualNeedsByMonth[monthKey].push({
+      id: it.id,
+      title: it.title,
+      category: it.category,
+      price: priceInBase,
+      currency: it.currency,
+      ...(it.currency !== baseCurrency && { originalPrice: it.price }),
+      priority: it.priority,
+      achieved: it.achieved,
+      targetMonthKey: monthKey,
+      // Give manual items a very high score to prioritize them
+      score: desirabilityScore(priceInBase, it.priority, settings, maxRank) * 1000,
+    });
+  }
+
+  const manualWantsByMonth: Record<string, PlannedItem[]> = {};
+  for (const { item: it, priceInBase } of wantsWithTarget) {
+    const monthKey = it.targetMonthKey!;
+    if (!manualWantsByMonth[monthKey]) manualWantsByMonth[monthKey] = [];
+    manualWantsByMonth[monthKey].push({
+      id: it.id,
+      title: it.title,
+      category: it.category,
+      price: priceInBase,
+      currency: it.currency,
+      ...(it.currency !== baseCurrency && { originalPrice: it.price }),
+      priority: it.priority,
+      achieved: it.achieved,
+      targetMonthKey: monthKey,
+      // Give manual items a very high score to prioritize them
+      score: desirabilityScore(priceInBase, it.priority, settings, maxRank) * 1000,
+    });
+  }
+
+  // Automatic items (without targetMonthKey) - sorted by score
+  let needsPool: PlannedItem[] = needsAuto.map(({ item: it, priceInBase }) => ({
     id: it.id,
     title: it.title,
     category: it.category,
@@ -183,7 +228,7 @@ export function buildAcquisitionPlan(items: Item[], settings: PlanSettings): Acq
     score: desirabilityScore(priceInBase, it.priority, settings, maxRank),
   })).sort(sortByScoreDesc);
 
-  let wantsPool: PlannedItem[] = wants.map(({ item: it, priceInBase }) => ({
+  let wantsPool: PlannedItem[] = wantsAuto.map(({ item: it, priceInBase }) => ({
     id: it.id,
     title: it.title,
     category: it.category,
@@ -236,10 +281,17 @@ export function buildAcquisitionPlan(items: Item[], settings: PlanSettings): Acq
     const monthDate = addMonths(start, m);
     const monthKey = ymKeyFromDate(monthDate);
     const achievedPicks = achievedByMonth[monthKey] ?? [];
-    if (needsPool.length === 0 && wantsPool.length === 0 && achievedPicks.length === 0) break;
+    
+    // Check if we should continue (manual items might be in future months)
+    const hasManualItems = (manualNeedsByMonth[monthKey]?.length ?? 0) > 0 || 
+                           (manualWantsByMonth[monthKey]?.length ?? 0) > 0;
+    if (needsPool.length === 0 && wantsPool.length === 0 && achievedPicks.length === 0 && !hasManualItems) break;
 
     const budgetAdded = monthlyBudget;
-    const budgetCarryIn = carryover ? carry : 0;
+    const allowExceed = settings.allowBudgetExceed ?? false;
+    // Carry-in: if carryover is enabled OR allowExceed is enabled, use carry (can be negative)
+    // Otherwise, no carry-in
+    const budgetCarryIn = (carryover || allowExceed) ? carry : 0;
     let remaining = budgetAdded + budgetCarryIn;
 
     const picks: PlannedItem[] = [...achievedPicks];
@@ -247,7 +299,39 @@ export function buildAcquisitionPlan(items: Item[], settings: PlanSettings): Acq
     let pickedNeeds = achievedPicks.filter((p) => p.category === "need").length;
     let pickedWants = achievedPicks.filter((p) => p.category === "want").length;
 
-    // pick loop: fill remaining budget with active (non-achieved) items
+    // First, place manual items (with targetMonthKey) for this month
+    const manualNeeds = manualNeedsByMonth[monthKey] ?? [];
+    const manualWants = manualWantsByMonth[monthKey] ?? [];
+    
+    // Sort manual items by priority (rank: lower first, weight: higher first)
+    const sortedManualNeeds = [...manualNeeds].sort((a, b) => {
+      if (settings.priorityMode === "rank") return a.priority - b.priority;
+      return b.priority - a.priority;
+    });
+    const sortedManualWants = [...manualWants].sort((a, b) => {
+      if (settings.priorityMode === "rank") return a.priority - b.priority;
+      return b.priority - a.priority;
+    });
+
+    // Place manual items - if allowExceed is true, place them even if exceeding budget
+    for (const manualItem of [...sortedManualNeeds, ...sortedManualWants]) {
+      if (allowExceed || manualItem.price <= remaining) {
+        picks.push(manualItem);
+        remaining -= manualItem.price;
+        if (manualItem.category === "need") pickedNeeds += 1;
+        else pickedWants += 1;
+        // Remove from manual pools
+        if (manualItem.category === "need") {
+          const idx = manualNeedsByMonth[monthKey]?.findIndex((p) => p.id === manualItem.id);
+          if (idx !== undefined && idx >= 0) manualNeedsByMonth[monthKey].splice(idx, 1);
+        } else {
+          const idx = manualWantsByMonth[monthKey]?.findIndex((p) => p.id === manualItem.id);
+          if (idx !== undefined && idx >= 0) manualWantsByMonth[monthKey].splice(idx, 1);
+        }
+      }
+    }
+
+    // Then, fill remaining budget with automatic items
     while (true) {
       const canNeed = nextAffordable(needsPool, remaining) !== -1;
       const canWant = nextAffordable(wantsPool, remaining) !== -1;
@@ -275,8 +359,21 @@ export function buildAcquisitionPlan(items: Item[], settings: PlanSettings): Acq
     }
 
     const spent = picks.reduce((s, p) => s + p.price, 0);
-    const budgetCarryOut = carryover ? remaining : 0;
-    carry = budgetCarryOut;
+    // If allowExceed is true, allow negative carryout (overconsumption) even if carryover is false
+    // This shows the overconsumption amount in the UI
+    // Otherwise, carryout is 0 if negative (no carryover of debt)
+    const budgetCarryOut = allowExceed 
+      ? remaining  // Can be negative, showing overconsumption
+      : (carryover ? Math.max(0, remaining) : 0);  // Only positive if carryover enabled
+    // Carry forward: if allowExceed is true, carry negative values (debt); 
+    // if carryover is enabled, carry positive values; otherwise don't carry
+    if (allowExceed) {
+      carry = budgetCarryOut;  // Can be negative (debt carries forward)
+    } else if (carryover) {
+      carry = Math.max(0, budgetCarryOut);  // Only positive carryover
+    } else {
+      carry = 0;  // No carryover
+    }
 
     months.push({
       monthKey,
@@ -291,7 +388,15 @@ export function buildAcquisitionPlan(items: Item[], settings: PlanSettings): Acq
     if (monthlyBudget <= 0 && picks.length === 0) break;
   }
 
-  const remainingUnplanned = [...needsPool, ...wantsPool].sort(sortByScoreDesc);
+  // Collect remaining unplanned items (automatic + manual that couldn't fit)
+  const remainingManual: PlannedItem[] = [];
+  for (const monthItems of Object.values(manualNeedsByMonth)) {
+    remainingManual.push(...monthItems);
+  }
+  for (const monthItems of Object.values(manualWantsByMonth)) {
+    remainingManual.push(...monthItems);
+  }
+  const remainingUnplanned = [...needsPool, ...wantsPool, ...remainingManual].sort(sortByScoreDesc);
 
   return {
     baseCurrency,

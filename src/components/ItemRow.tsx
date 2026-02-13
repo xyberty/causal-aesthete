@@ -46,10 +46,15 @@ export function ItemRow({
                 <span className="text-neutral-500">Achieved {formatAchievedDate(item.updatedAt)}</span>
               )}
               <span>{formatMoney(item.price, item.currency)}</span>
-              <Badge variant="secondary">
+              {/* <Badge variant="secondary">
                 {priorityMode === "rank" ? `Rank ${item.priority}` : `Weight ${item.priority}`}
-              </Badge>
+              </Badge> */}
               <Badge variant="outline">{item.category === "need" ? "Need" : "Want"}</Badge>
+              {item.targetMonthKey && (
+                <Badge variant="default" className="bg-blue-100 text-blue-800 border-blue-200">
+                  {item.targetMonthKey}
+                </Badge>
+              )}
               {showLabels && (item.labels ?? []).length > 0 && (
                 <>
                   {(item.labels ?? []).map((l) => (

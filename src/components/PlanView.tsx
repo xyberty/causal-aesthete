@@ -76,14 +76,21 @@ export function PlanView() {
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 <span>{m.monthKey}</span>
-                <span className="text-sm font-medium text-neutral-600">
+                <span className={cn(
+                  "text-sm font-medium",
+                  m.spent > m.budgetAdded + m.budgetCarryIn ? "text-red-600 dark:text-red-500" : "text-neutral-600"
+                )}>
                   Spent {formatMoney(m.spent, plan.baseCurrency)}
                 </span>
               </CardTitle>
               <CardDescription>
                 Added {formatMoney(m.budgetAdded, plan.baseCurrency)} • Carry-in{" "}
-                {formatMoney(m.budgetCarryIn, plan.baseCurrency)} • Carry-out{" "}
-                {formatMoney(m.budgetCarryOut, plan.baseCurrency)}
+                <span className={m.budgetCarryIn < 0 ? "text-red-600 dark:text-red-500 font-medium" : ""}>
+                  {formatMoney(m.budgetCarryIn, plan.baseCurrency)}
+                </span> • Carry-out{" "}
+                <span className={m.budgetCarryOut < 0 ? "text-red-600 dark:text-red-500 font-medium" : ""}>
+                  {formatMoney(m.budgetCarryOut, plan.baseCurrency)}
+                </span>
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -116,6 +123,11 @@ export function PlanView() {
                               <Badge variant="secondary">Achieved</Badge>
                             )}
                             <Badge variant="outline">{p.category === "need" ? "Need" : "Want"}</Badge>
+                            {p.targetMonthKey && (
+                              <Badge variant="default" className="bg-blue-100 text-blue-800 border-blue-200">
+                                {p.targetMonthKey}
+                              </Badge>
+                            )}
                             <span>{formatMoney(p.price, plan.baseCurrency)}</span>
                             {p.originalPrice != null && (
                               <span className="text-neutral-400">
