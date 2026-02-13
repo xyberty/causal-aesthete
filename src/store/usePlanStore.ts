@@ -43,6 +43,10 @@ export type PlanSettings = {
   enableLabels?: boolean;
   /** Advanced: allow manual items with target month to exceed monthly budget. */
   allowBudgetExceed?: boolean;
+  /** Advanced: enable monthly budget overrides per month. */
+  enableMonthlyBudgetOverrides?: boolean;
+  /** Monthly budget overrides: monthKey (YYYY-MM) -> budget amount in base currency. */
+  monthlyBudgetOverrides?: Record<string, number>;
 };
 
 export type AppState = {
@@ -91,6 +95,8 @@ export const defaultState: AppState = {
     fxRates: {},
     enableLabels: false,
     allowBudgetExceed: false,
+    enableMonthlyBudgetOverrides: false,
+    monthlyBudgetOverrides: {},
   },
 };
 
@@ -164,6 +170,8 @@ export const usePlanStore = create<PlanStore>((set, _get) => ({
     if (!merged.fxRates || typeof merged.fxRates !== "object") merged.fxRates = {};
     if (merged.enableLabels === undefined) merged.enableLabels = false;
     if (merged.allowBudgetExceed === undefined) merged.allowBudgetExceed = false;
+    if (merged.enableMonthlyBudgetOverrides === undefined) merged.enableMonthlyBudgetOverrides = false;
+    if (!merged.monthlyBudgetOverrides || typeof merged.monthlyBudgetOverrides !== "object") merged.monthlyBudgetOverrides = {};
     const items = Array.isArray(state.items) ? state.items : [];
     set({
       version: 1,

@@ -119,13 +119,16 @@ export function getCurrentMonthForNewAchieved(
   const start = new Date(settings.startDate + "T00:00:00");
   const monthlyBudget = Number(settings.monthlyBudget || 0);
   const carryover = !!settings.carryover;
+  const useOverrides = settings.enableMonthlyBudgetOverrides ?? false;
   const maxMonths = Math.max(1, settings.maxMonths ?? 36);
 
   let carry = 0;
   for (let m = 0; m < maxMonths; m++) {
     const monthDate = addMonths(start, m);
     const monthKey = ymKeyFromDate(monthDate);
-    let remaining = monthlyBudget + (carryover ? carry : 0);
+    const budgetOverride = useOverrides ? (settings.monthlyBudgetOverrides?.[monthKey]) : undefined;
+    const monthBudget = budgetOverride !== undefined ? budgetOverride : monthlyBudget;
+    let remaining = monthBudget + (carryover ? carry : 0);
     const inMonth = byMonth[monthKey] ?? [];
     for (const { priceInBase: p } of inMonth) remaining -= p;
     if (remaining >= priceInBase) return monthKey;
@@ -287,7 +290,10 @@ export function buildAcquisitionPlan(items: Item[], settings: PlanSettings): Acq
                            (manualWantsByMonth[monthKey]?.length ?? 0) > 0;
     if (needsPool.length === 0 && wantsPool.length === 0 && achievedPicks.length === 0 && !hasManualItems) break;
 
-    const budgetAdded = monthlyBudget;
+    // Use overridden budget if feature is enabled and override exists, otherwise use default monthlyBudget
+    const useOverrides = settings.enableMonthlyBudgetOverrides ?? false;
+    const budgetOverride = useOverrides ? (settings.monthlyBudgetOverrides?.[monthKey]) : undefined;
+    const budgetAdded = budgetOverride !== undefined ? budgetOverride : monthlyBudget;
     const allowExceed = settings.allowBudgetExceed ?? false;
     // Carry-in: if carryover is enabled OR allowExceed is enabled, use carry (can be negative)
     // Otherwise, no carry-in

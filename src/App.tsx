@@ -357,6 +357,15 @@ function PlanConfigModal({
               />
               Allow monthly budget exceed (manual items with target month can exceed budget)
             </label>
+            <label className="flex cursor-pointer items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={settings.enableMonthlyBudgetOverrides ?? false}
+                onChange={(e) => setSettings({ enableMonthlyBudgetOverrides: e.target.checked })}
+                className="h-4 w-4 rounded border-neutral-300"
+              />
+              Enable monthly budget overrides (override budget for specific months)
+            </label>
           </div>
         </div>
       </DialogContent>

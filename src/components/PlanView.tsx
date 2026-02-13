@@ -1,15 +1,113 @@
-import { useMemo } from "react";
-import { AlertTriangle } from "lucide-react";
+import { useMemo, useState, useEffect } from "react";
+import { AlertTriangle, Pencil, X } from "lucide-react";
 import { usePlanStore } from "@/store/usePlanStore";
 import { buildAcquisitionPlan } from "@/lib/planner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
 import { cn, formatMoney } from "@/lib/utils";
+
+function InlineBudgetEditor({
+  monthKey,
+  currentBudget,
+  defaultBudget,
+  baseCurrency,
+  overrides,
+  onOverrideChange,
+}: {
+  monthKey: string;
+  currentBudget: number;
+  defaultBudget: number;
+  baseCurrency: string;
+  overrides: Record<string, number>;
+  onOverrideChange: (monthKey: string, value: number | null) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [inputValue, setInputValue] = useState(String(currentBudget));
+  const hasOverride = overrides[monthKey] !== undefined;
+
+  useEffect(() => {
+    if (!editing) {
+      setInputValue(String(currentBudget));
+    }
+  }, [currentBudget, editing]);
+
+  const handleSave = () => {
+    const numValue = Number(inputValue);
+    if (Number.isFinite(numValue) && numValue >= 0) {
+      onOverrideChange(monthKey, numValue === defaultBudget ? null : numValue);
+      setEditing(false);
+    } else {
+      setInputValue(String(currentBudget));
+      setEditing(false);
+    }
+  };
+
+  const handleReset = () => {
+    onOverrideChange(monthKey, null);
+    setEditing(false);
+  };
+
+  if (editing) {
+    return (
+      <span className="inline-flex items-center gap-1">
+        <Input
+          type="number"
+          inputMode="decimal"
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          onBlur={handleSave}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              handleSave();
+            }
+            if (e.key === "Escape") {
+              setInputValue(String(currentBudget));
+              setEditing(false);
+            }
+          }}
+          className="h-5 w-20 px-1.5 text-xs"
+          autoFocus
+        />
+        <span className="text-xs">{baseCurrency}</span>
+      </span>
+    );
+  }
+
+  return (
+    <span className="inline-flex items-center gap-1">
+      {formatMoney(currentBudget, baseCurrency)}
+      <button
+        type="button"
+        onClick={() => {
+          setEditing(true);
+          setInputValue(String(currentBudget));
+        }}
+        className="inline-flex items-center justify-center rounded p-0.5 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600"
+        aria-label="Edit budget"
+      >
+        <Pencil className="h-3 w-3" />
+      </button>
+      {hasOverride && (
+        <button
+          type="button"
+          onClick={handleReset}
+          className="inline-flex items-center justify-center rounded p-0.5 text-neutral-400 hover:bg-neutral-100 hover:text-red-600"
+          aria-label="Reset to default"
+        >
+          <X className="h-3 w-3" />
+        </button>
+      )}
+    </span>
+  );
+}
 
 export function PlanView() {
   const items = usePlanStore((s) => s.items);
   const settings = usePlanStore((s) => s.settings);
+  const setSettings = usePlanStore((s) => s.setSettings);
 
   const plan = useMemo(() => buildAcquisitionPlan(items, settings), [items, settings]);
 
@@ -84,7 +182,30 @@ export function PlanView() {
                 </span>
               </CardTitle>
               <CardDescription>
-                Added {formatMoney(m.budgetAdded, plan.baseCurrency)} • Carry-in{" "}
+                <span className="inline-flex items-center gap-1">
+                  Added{" "}
+                  {settings.enableMonthlyBudgetOverrides ? (
+                    <InlineBudgetEditor
+                      monthKey={m.monthKey}
+                      currentBudget={m.budgetAdded}
+                      defaultBudget={plan.monthlyBudget}
+                      baseCurrency={plan.baseCurrency}
+                      overrides={settings.monthlyBudgetOverrides ?? {}}
+                      onOverrideChange={(monthKey, value) => {
+                        const newOverrides = { ...(settings.monthlyBudgetOverrides ?? {}) };
+                        if (value === null || value === undefined || value === plan.monthlyBudget) {
+                          delete newOverrides[monthKey];
+                        } else {
+                          newOverrides[monthKey] = value;
+                        }
+                        setSettings({ monthlyBudgetOverrides: newOverrides });
+                      }}
+                    />
+                  ) : (
+                    formatMoney(m.budgetAdded, plan.baseCurrency)
+                  )}
+                </span>{" "}
+                • Carry-in{" "}
                 <span className={m.budgetCarryIn < 0 ? "text-red-600 dark:text-red-500 font-medium" : ""}>
                   {formatMoney(m.budgetCarryIn, plan.baseCurrency)}
                 </span> • Carry-out{" "}
