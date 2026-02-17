@@ -31,8 +31,8 @@ export function Layout({ children, openPlanConfig, openFxRates, openHelp }: Layo
               <Heart className="h-4 w-4" />
             </div>
             <div className="leading-tight">
-              <div className="text-sm font-semibold">Wish Plan</div>
-              <div className="text-xs text-neutral-500">Local-only • Export/Import</div>
+              <div className="text-sm font-semibold">DNWP</div>
+              <div className="text-xs text-neutral-500">Local-only wish list + acquisition planner</div>
             </div>
           </div>
 

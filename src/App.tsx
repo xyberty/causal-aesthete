@@ -114,12 +114,12 @@ export default function App() {
       <div className="space-y-4">
         <Card>
           <CardHeader>
-            <CardTitle>Your plan</CardTitle>
+            <CardTitle>Current plan</CardTitle>
             <CardDescription>
               {formatMoney(settings.monthlyBudget, base)} / month • Start {settings.startDate}
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          {/* <CardContent>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               <div className="rounded-xl border border-neutral-200 p-3">
                 <div className="text-xs text-neutral-500">Active needs</div>
@@ -138,14 +138,14 @@ export default function App() {
                 <div className="text-lg font-semibold">{plannedCount}</div>
               </div>
             </div>
-          </CardContent>
+          </CardContent> */}
         </Card>
 
         <Tabs defaultValue="needs">
           <TabsList className="w-full justify-start">
-            <TabsTrigger value="needs">Needs</TabsTrigger>
-            <TabsTrigger value="wants">Wants</TabsTrigger>
-            <TabsTrigger value="plan">Plan</TabsTrigger>
+            <TabsTrigger value="needs">Needs&ensp;<span className="text-neutral-400">{activeNeeds.length}</span></TabsTrigger>
+            <TabsTrigger value="wants">Wants&ensp;<span className="text-neutral-400">{activeWants.length}</span></TabsTrigger>
+            <TabsTrigger value="plan">Acquisition&ensp;<span className="text-neutral-400">{achieved.length}/{plannedCount}</span></TabsTrigger>
           </TabsList>
 
           <TabsContent value="needs">
