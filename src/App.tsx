@@ -116,29 +116,25 @@ export default function App() {
           <CardHeader>
             <CardTitle>Current plan</CardTitle>
             <CardDescription>
-              {formatMoney(settings.monthlyBudget, base)} / month • Start {settings.startDate}
+              Start {plan.startDate} • {formatMoney(plan.monthlyBudget, plan.baseCurrency)} per month •{" "}
+              {plan.carryover ? "carryover on" : "carryover off"} • ratio {plan.ratioNeeds}:{plan.ratioWants} (need:want)
             </CardDescription>
           </CardHeader>
-          {/* <CardContent>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <div className="rounded-xl border border-neutral-200 p-3">
-                <div className="text-xs text-neutral-500">Active needs</div>
-                <div className="text-lg font-semibold">{activeNeeds.length}</div>
-              </div>
-              <div className="rounded-xl border border-neutral-200 p-3">
-                <div className="text-xs text-neutral-500">Active wants</div>
-                <div className="text-lg font-semibold">{activeWants.length}</div>
-              </div>
-              <div className="rounded-xl border border-neutral-200 p-3">
-                <div className="text-xs text-neutral-500">Achieved</div>
-                <div className="text-lg font-semibold">{achieved.length}</div>
-              </div>
-              <div className="rounded-xl border border-neutral-200 p-3">
-                <div className="text-xs text-neutral-500">Planned</div>
-                <div className="text-lg font-semibold">{plannedCount}</div>
-              </div>
+          <CardContent>
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge>Planned: {plannedCount}</Badge>
+              <Badge variant="secondary">Unplanned: {plan.remainingUnplanned.length}</Badge>
+              {plan.excludedOtherCurrencies.length > 0 && (
+                <Badge variant="secondary">Excluded: {plan.excludedOtherCurrencies.length} (currency)</Badge>
+              )}
             </div>
-          </CardContent> */}
+
+            {plan.months.length === 0 && (
+              <div className="mt-4 rounded-xl border border-neutral-200 p-3 text-sm text-neutral-600">
+                No plan generated. Add items and set a monthly budget (optional but recommended).
+              </div>
+            )}
+          </CardContent>
         </Card>
 
         <Tabs defaultValue="needs">

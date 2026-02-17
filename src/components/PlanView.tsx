@@ -111,35 +111,8 @@ export function PlanView() {
 
   const plan = useMemo(() => buildAcquisitionPlan(items, settings), [items, settings]);
 
-  const plannedCount = plan.months.reduce((n, m) => n + m.picks.length, 0);
-
   return (
     <div className="space-y-4">
-      <Card>
-        <CardHeader>
-          <CardTitle>Acquisition plan</CardTitle>
-          <CardDescription>
-            Start {plan.startDate} • {formatMoney(plan.monthlyBudget, plan.baseCurrency)} per month •{" "}
-            {plan.carryover ? "carryover on" : "carryover off"} • ratio {plan.ratioNeeds}:{plan.ratioWants} (need:want)
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge>Planned: {plannedCount}</Badge>
-            <Badge variant="secondary">Unplanned: {plan.remainingUnplanned.length}</Badge>
-            {plan.excludedOtherCurrencies.length > 0 && (
-              <Badge variant="secondary">Excluded: {plan.excludedOtherCurrencies.length} (currency)</Badge>
-            )}
-          </div>
-
-          {plan.months.length === 0 && (
-            <div className="mt-4 rounded-xl border border-neutral-200 p-3 text-sm text-neutral-600">
-              No plan generated. Add items and set a monthly budget (optional but recommended).
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
       {plan.excludedOtherCurrencies.length > 0 && (
         <Card>
           <CardHeader>
