@@ -4,6 +4,8 @@ import { usePlanStore } from "@/store/usePlanStore";
 import { buildAcquisitionPlan } from "@/lib/planner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { BorderedBox } from "@/components/ui/bordered-box";
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { cn, formatMoney } from "@/lib/utils";
@@ -79,27 +81,33 @@ function InlineBudgetEditor({
   return (
     <span className="inline-flex items-center gap-1">
       {formatMoney(currentBudget, baseCurrency)}
-      <button
-        type="button"
-        onClick={() => {
-          setEditing(true);
-          setInputValue(String(currentBudget));
-        }}
-        className="inline-flex items-center justify-center rounded p-0.5 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
-        aria-label="Edit budget"
-      >
-        <Pencil className="h-3 w-3" />
-      </button>
-      {hasOverride && (
-        <button
+      <span className="inline-flex items-center gap-0">
+        <Button
           type="button"
-          onClick={handleReset}
-          className="inline-flex items-center justify-center rounded p-0.5 text-neutral-400 hover:bg-neutral-100 hover:text-red-600 dark:hover:bg-neutral-800"
-          aria-label="Reset to default"
+          variant="ghost"
+          size="iconSm"
+          className="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200"
+          onClick={() => {
+            setEditing(true);
+            setInputValue(String(currentBudget));
+          }}
+          aria-label="Edit budget"
         >
-          <X className="h-3 w-3" />
-        </button>
-      )}
+          <Pencil className="h-3" />
+        </Button>
+        {hasOverride && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="iconSm"
+            className="text-neutral-400 hover:text-red-600 dark:hover:text-red-500"
+            onClick={handleReset}
+            aria-label="Reset to default"
+          >
+            <X className="h-3" />
+          </Button>
+        )}
+      </span>
     </span>
   );
 }
@@ -127,17 +135,14 @@ export function PlanView() {
           <CardContent>
             <div className="space-y-2">
               {plan.excludedOtherCurrencies.map((it) => (
-                <div
-                  key={it.id}
-                  className="flex items-center justify-between rounded-xl border border-neutral-200 p-3 dark:border-neutral-800"
-                >
+                <BorderedBox key={it.id} className="flex items-center justify-between">
                   <div className="min-w-0">
                     <div className="truncate text-sm font-medium">{it.title}</div>
                     <div className="text-xs text-neutral-500 dark:text-neutral-400">
                       {it.category === "need" ? "Need" : "Want"} • {formatMoney(it.price, it.currency)}
                     </div>
                   </div>
-                </div>
+                </BorderedBox>
               ))}
             </div>
           </CardContent>
@@ -198,15 +203,7 @@ export function PlanView() {
               ) : (
                 <div className="space-y-2">
                   {m.picks.map((p, idx) => (
-                    <div
-                      key={p.id}
-                      className={cn(
-                        "rounded-xl border p-3",
-                        p.achieved
-                          ? "border-neutral-200 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900/40"
-                          : "border-neutral-200 dark:border-neutral-800"
-                      )}
-                    >
+                    <BorderedBox key={p.id} variant={p.achieved ? "filled" : "default"}>
                       <div className="flex items-center justify-between gap-3">
                         <div className="min-w-0">
                           <div
@@ -223,12 +220,7 @@ export function PlanView() {
                             )}
                             <Badge variant="outline">{p.category === "need" ? "Need" : "Want"}</Badge>
                             {p.targetMonthKey && (
-                              <Badge
-                                variant="default"
-                                className="border-blue-200 bg-blue-100 text-blue-800 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-200"
-                              >
-                                {p.targetMonthKey}
-                              </Badge>
+                              <Badge variant="info">{p.targetMonthKey}</Badge>
                             )}
                             <span>{formatMoney(p.price, plan.baseCurrency)}</span>
                             {p.originalPrice != null && (
@@ -239,7 +231,7 @@ export function PlanView() {
                           </div>
                         </div>
                       </div>
-                    </div>
+                    </BorderedBox>
                   ))}
                 </div>
               )}

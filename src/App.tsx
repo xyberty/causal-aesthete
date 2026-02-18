@@ -15,10 +15,13 @@ import { CSS } from "@dnd-kit/utilities";
 import { Layout } from "@/components/Layout";
 import { PlanView } from "@/components/PlanView";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { BorderedBox } from "@/components/ui/bordered-box";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import {
   Dialog,
@@ -130,9 +133,9 @@ export default function App() {
             </div>
 
             {plan.months.length === 0 && (
-              <div className="mt-4 rounded-xl border border-neutral-200 p-3 text-sm text-neutral-600 dark:border-neutral-800 dark:text-neutral-300">
+              <BorderedBox className="mt-4 text-sm text-neutral-600 dark:text-neutral-300">
                 No plan generated. Add items and set a monthly budget (optional but recommended).
-              </div>
+              </BorderedBox>
             )}
           </CardContent>
         </Card>
@@ -269,8 +272,7 @@ function PlanConfigModal({
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1">
               <Label>Base currency</Label>
-              <select
-                className="h-10 w-full rounded-xl border border-neutral-200 bg-white px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 dark:border-neutral-700 dark:bg-neutral-950 dark:focus-visible:ring-neutral-700"
+              <Select
                 value={toCurrency(settings.baseCurrency)}
                 onChange={(e) => setSettings({ baseCurrency: e.target.value as Currency })}
               >
@@ -279,7 +281,7 @@ function PlanConfigModal({
                     {ccy}
                   </option>
                 ))}
-              </select>
+              </Select>
             </div>
             <div className="space-y-1">
               <Label>Start date</Label>
@@ -301,25 +303,23 @@ function PlanConfigModal({
           </div>
           <div className="space-y-1">
             <Label>Carryover</Label>
-            <select
-              className="h-10 w-full rounded-xl border border-neutral-200 bg-white px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 dark:border-neutral-700 dark:bg-neutral-950 dark:focus-visible:ring-neutral-700"
+            <Select
               value={settings.carryover ? "yes" : "no"}
               onChange={(e) => setSettings({ carryover: e.target.value === "yes" })}
             >
               <option value="yes">Yes (unused budget rolls)</option>
               <option value="no">No (reset each month)</option>
-            </select>
+            </Select>
           </div>
           <div className="space-y-1">
             <Label>Priority mode</Label>
-            <select
-              className="h-10 w-full rounded-xl border border-neutral-200 bg-white px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 dark:border-neutral-700 dark:bg-neutral-950 dark:focus-visible:ring-neutral-700"
+            <Select
               value={settings.priorityMode}
               onChange={(e) => setSettings({ priorityMode: e.target.value as PriorityMode })}
             >
               <option value="rank">Rank (1 is highest)</option>
               <option value="weight">Weight (higher is better)</option>
-            </select>
+            </Select>
           </div>
           <div className="space-y-1">
             <Label>Need:Want ratio</Label>
@@ -342,29 +342,23 @@ function PlanConfigModal({
           <div className="space-y-2">
             <div className="text-sm font-medium text-neutral-700 dark:text-neutral-200">Advanced</div>
             <label className="flex cursor-pointer items-center gap-2 text-sm">
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={settings.enableLabels ?? false}
                 onChange={(e) => setSettings({ enableLabels: e.target.checked })}
-                className="h-4 w-4 rounded border-neutral-300 dark:border-neutral-700"
               />
               Enable labels on items (e.g. family, bike, living-room)
             </label>
             <label className="flex cursor-pointer items-center gap-2 text-sm">
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={settings.allowBudgetExceed ?? false}
                 onChange={(e) => setSettings({ allowBudgetExceed: e.target.checked })}
-                className="h-4 w-4 rounded border-neutral-300 dark:border-neutral-700"
               />
               Allow monthly budget exceed (manual items with target month can exceed budget)
             </label>
             <label className="flex cursor-pointer items-center gap-2 text-sm">
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={settings.enableMonthlyBudgetOverrides ?? false}
                 onChange={(e) => setSettings({ enableMonthlyBudgetOverrides: e.target.checked })}
-                className="h-4 w-4 rounded border-neutral-300 dark:border-neutral-700"
               />
               Enable monthly budget overrides (override budget for specific months)
             </label>
@@ -449,8 +443,8 @@ function FxRatesEditor({
       <div className="flex flex-wrap items-end gap-2">
         <div className="space-y-1">
           <Label className="text-xs">Currency</Label>
-          <select
-            className="h-10 w-24 rounded-xl border border-neutral-200 bg-white px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 dark:border-neutral-700 dark:bg-neutral-950 dark:focus-visible:ring-neutral-700"
+          <Select
+            className="w-24"
             value={newCcy}
             onChange={(e) => setNewCcy(e.target.value ? (e.target.value as Currency) : "")}
           >
@@ -460,7 +454,7 @@ function FxRatesEditor({
                 {ccy}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
         <div className="space-y-1">
           <Label className="text-xs">Rate (1 = ? {baseCurrency})</Label>
@@ -641,22 +635,24 @@ function ListSection({
                   className="flex items-center gap-1 pr-1 text-xs"
                 >
                   {l}
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="iconSm"
+                    // className="hover:bg-neutral-300 dark:hover:bg-neutral-700"
                     onClick={() =>
                       onFilterLabelsChange?.(
                         (filterLabels ?? []).filter((x) => x !== l)
                       )
                     }
-                  className="rounded p-0.5 hover:bg-neutral-300 dark:hover:bg-neutral-700"
                     aria-label={`Remove filter ${l}`}
                   >
                     <X className="h-3 w-3" />
-                  </button>
+                  </Button>
                 </Badge>
               ))}
-              <select
-              className="h-8 rounded-lg border border-neutral-200 bg-white px-2 text-xs text-neutral-600 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-300"
+              <Select
+                className="h-8 w-auto min-w-[10rem] shrink-0 rounded-lg px-2 text-xs text-neutral-600 dark:text-neutral-300"
                 value=""
                 onChange={(e) => {
                   const v = e.target.value;
@@ -665,7 +661,7 @@ function ListSection({
                   if (!current.includes(v)) {
                     onFilterLabelsChange?.([...current, v].sort());
                   }
-                  e.target.value = "";
+                  e.currentTarget.value = "";
                 }}
               >
                 <option value="">Choose label…</option>
@@ -674,7 +670,7 @@ function ListSection({
                     {l}
                   </option>
                 ))}
-              </select>
+              </Select>
               {hasFilter && (
                 <Button
                   type="button"

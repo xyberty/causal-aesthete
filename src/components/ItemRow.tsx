@@ -2,6 +2,7 @@ import { Pencil, Trash2, CheckCircle2 } from "lucide-react";
 import { Item, PriorityMode, usePlanStore } from "@/store/usePlanStore";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { BorderedBox } from "@/components/ui/bordered-box";
 import { cn, formatAchievedDate, formatMoney } from "@/lib/utils";
 
 export function ItemRow({
@@ -61,12 +62,7 @@ export function ItemRow({
               </Badge> */}
               <Badge variant="outline">{item.category === "need" ? "Need" : "Want"}</Badge>
               {item.targetMonthKey && (
-                <Badge
-                  variant="default"
-                  className="border-blue-200 bg-blue-100 text-blue-800 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-200"
-                >
-                  {item.targetMonthKey}
-                </Badge>
+                <Badge variant="info">{item.targetMonthKey}</Badge>
               )}
               {showLabels && (item.labels ?? []).length > 0 && (
                 <>
@@ -85,7 +81,7 @@ export function ItemRow({
   );
 
   return (
-    <div className="flex items-start justify-between gap-3 rounded-xl border border-neutral-200 p-3 dark:border-neutral-800">
+    <BorderedBox className="flex items-start justify-between gap-3">
       {dragHandleProps ? (
         <div
           {...(dragHandleProps.attributes ?? {})}
@@ -115,6 +111,6 @@ export function ItemRow({
         </Button>
         {dragHandleIcon}
         </div>
-    </div>
+    </BorderedBox>
   );
 }

@@ -4,6 +4,7 @@ import { CURRENCIES, toCurrency } from "@/lib/currencies";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
 import { LabelCombobox } from "@/components/LabelCombobox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { buildAcquisitionPlan } from "@/lib/planner";
@@ -165,8 +166,7 @@ export function ItemDialog({
             </div>
             <div className="space-y-1">
               <Label>Currency</Label>
-              <select
-                className="h-10 w-full rounded-xl border border-neutral-200 bg-white px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 dark:border-neutral-700 dark:bg-neutral-950 dark:focus-visible:ring-neutral-700"
+              <Select
                 value={toCurrency(form.currency)}
                 onChange={(e) => setForm((s) => ({ ...s, currency: e.target.value }))}
               >
@@ -175,21 +175,20 @@ export function ItemDialog({
                     {ccy}
                   </option>
                 ))}
-              </select>
+              </Select>
             </div>
           </div>
 
           {(!defaultCategory || isEdit) && (
             <div className="space-y-1">
               <Label>Category</Label>
-              <select
-                className="h-10 w-full rounded-xl border border-neutral-200 bg-white px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 dark:border-neutral-700 dark:bg-neutral-950 dark:focus-visible:ring-neutral-700"
+              <Select
                 value={form.category}
                 onChange={(e) => setForm((s) => ({ ...s, category: e.target.value as Category }))}
               >
                 <option value="need">Need</option>
                 <option value="want">Want</option>
-              </select>
+              </Select>
             </div>
           )}
 
@@ -207,8 +206,7 @@ export function ItemDialog({
 
           <div className="space-y-1">
             <Label>Target month (optional)</Label>
-            <select
-              className="h-10 w-full rounded-xl border border-neutral-200 bg-white px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 dark:border-neutral-700 dark:bg-neutral-950 dark:focus-visible:ring-neutral-700"
+            <Select
               value={form.targetMonthKey}
               onChange={(e) => setForm((s) => ({ ...s, targetMonthKey: e.target.value }))}
             >
@@ -218,7 +216,7 @@ export function ItemDialog({
                   {monthKey}
                 </option>
               ))}
-            </select>
+            </Select>
             <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
               Items with a target month are prioritized and placed in that specific month if affordable.
             </p>

@@ -1,6 +1,7 @@
 import { useRef, useEffect, useState, useMemo } from "react";
 import { X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 export function normalizeLabel(s: string): string {
   return s.trim().toLowerCase().replace(/\s+/g, "-");
@@ -120,14 +121,16 @@ export function LabelCombobox({
             className="flex items-center gap-1 pr-1 text-xs"
           >
             {l}
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="iconSm"
+              className="hover:bg-neutral-300 dark:hover:bg-neutral-700"
               onClick={() => onChange(value.filter((x) => x !== l))}
-              className="rounded p-0.5 hover:bg-neutral-300 dark:hover:bg-neutral-700"
               aria-label={`Remove ${l}`}
             >
               <X className="h-3 w-3" />
-            </button>
+            </Button>
           </Badge>
         ))}
         <input
