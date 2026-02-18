@@ -624,7 +624,10 @@ function ListSection({
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 8 } }),
+    useSensor(TouchSensor, {
+      // Long-press before drag on touch: ~500ms is Android’s “short” long-press and lets tap open the overlay
+      activationConstraint: { delay: 500, tolerance: 8 },
+    }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
