@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { useTheme } from "next-themes";
-import { Check, Heart, MoreHorizontal, Monitor, Moon, Sun } from "lucide-react";
+import { Check, Github, Heart, MoreHorizontal, Monitor, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ImportExport } from "@/components/ImportExport";
 import {
@@ -128,8 +128,22 @@ export function Layout({ children, openPlanConfig, openFxRates, openHelp }: Layo
 
       <main className="mx-auto max-w-4xl px-4 py-4">{children}</main>
 
-      <footer className="mx-auto max-w-4xl px-4 pb-8 pt-2 text-xs text-muted">
-        Built for local device storage. No network calls.
+      <footer className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-2 px-4 pb-8 pt-2 text-xs text-muted">
+        <span>Built for local device storage. No network calls.</span>
+        <span className="flex items-center gap-2">
+          <a
+            href="https://github.com/xyberty/causal-aesthete"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 hover:underline focus:outline-none focus:ring-2 focus:ring-neutral-400 dark:focus:ring-neutral-500 rounded"
+            aria-label="GitHub repository"
+          >
+            <Github className="h-3.5 w-3.5" />
+            Source
+          </a>
+          <span aria-hidden="true">·</span>
+          <span>v{__APP_VERSION__}</span>
+        </span>
       </footer>
     </div>
   );
