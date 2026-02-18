@@ -143,13 +143,13 @@ export default function App() {
         <Tabs defaultValue="needs">
           <TabsList className="w-full justify-start">
             <TabsTrigger value="needs">
-              Needs&ensp;<span className="text-neutral-400 dark:text-neutral-500">{activeNeeds.length}</span>
+              Needs&ensp;<span className="text-muted">{activeNeeds.length}</span>
             </TabsTrigger>
             <TabsTrigger value="wants">
-              Wants&ensp;<span className="text-neutral-400 dark:text-neutral-500">{activeWants.length}</span>
+              Wants&ensp;<span className="text-muted">{activeWants.length}</span>
             </TabsTrigger>
             <TabsTrigger value="plan">
-              Acquisition&ensp;<span className="text-neutral-400 dark:text-neutral-500">{achieved.length}/{plannedCount}</span>
+              Acquisition&ensp;<span className="text-muted">{achieved.length}/{plannedCount}</span>
             </TabsTrigger>
           </TabsList>
 
@@ -341,24 +341,24 @@ function PlanConfigModal({
           <Separator className="my-4" />
           <div className="space-y-2">
             <div className="text-sm font-medium text-neutral-700 dark:text-neutral-200">Advanced</div>
-            <Checkbox
+              <Checkbox
               label="Enable labels on items"
-              checked={settings.enableLabels ?? false}
-              onChange={(e) => setSettings({ enableLabels: e.target.checked })}
+                checked={settings.enableLabels ?? false}
+                onChange={(e) => setSettings({ enableLabels: e.target.checked })}
             >
               e.g. family, bike, living-room
             </Checkbox>
-            <Checkbox
+              <Checkbox
               label="Allow monthly budget exceed"
-              checked={settings.allowBudgetExceed ?? false}
-              onChange={(e) => setSettings({ allowBudgetExceed: e.target.checked })}
+                checked={settings.allowBudgetExceed ?? false}
+                onChange={(e) => setSettings({ allowBudgetExceed: e.target.checked })}
             >
               Manual items with target month can exceed budget
             </Checkbox>
-            <Checkbox
+              <Checkbox
               label="Enable monthly budget overrides"
-              checked={settings.enableMonthlyBudgetOverrides ?? false}
-              onChange={(e) => setSettings({ enableMonthlyBudgetOverrides: e.target.checked })}
+                checked={settings.enableMonthlyBudgetOverrides ?? false}
+                onChange={(e) => setSettings({ enableMonthlyBudgetOverrides: e.target.checked })}
             >
               Override budget for specific months
             </Checkbox>
@@ -475,14 +475,14 @@ function FxRatesEditor({
           {entries.map(([ccy, rate]) => (
             <li key={ccy} className="flex items-center justify-between gap-2 text-sm">
               <span className="font-medium">1 {ccy}</span>
-              <span className="text-neutral-500 dark:text-neutral-400">=</span>
+              <span className="text-muted">=</span>
               <Input
                 className="h-8 w-24"
                 inputMode="decimal"
                 value={rate}
                 onChange={(e) => updateRate(ccy, Number(e.target.value))}
               />
-              <span className="text-neutral-500 dark:text-neutral-400">{baseCurrency}</span>
+              <span className="text-muted">{baseCurrency}</span>
               <Button type="button" variant="ghost" size="sm" className="h-8 px-2" onClick={() => removeRate(ccy)}>
                 Remove
               </Button>
@@ -625,7 +625,7 @@ function ListSection({
           </div>
           {showLabels && (
             <div className="flex flex-wrap items-center justify-end gap-2">
-              <span className="flex items-center gap-1.5 text-xs text-neutral-500 dark:text-neutral-400">
+              <span className="flex items-center gap-1.5 text-xs text-muted">
                 <ListFilterIcon className="h-3.5 w-3.5" />
               </span>
               {hasFilter && (filterLabels ?? []).map((l) => (
@@ -676,7 +676,7 @@ function ListSection({
                   type="button"
                   variant={null}
                   size="sm"
-                  className="h-8 text-xs text-neutral-500 dark:text-neutral-400"
+                  className="h-8 text-xs text-muted"
                   onClick={onClearFilter}
                 >
                     <X size={16} />
@@ -687,7 +687,7 @@ function ListSection({
         </CardHeader>
         <CardContent>
           {sorted.length === 0 ? (
-            <div className="text-sm text-neutral-500 dark:text-neutral-400">
+            <div className="text-sm text-muted">
               {hasFilter ? "No items match the filter." : "No active items."}
             </div>
           ) : (
@@ -710,7 +710,7 @@ function ListSection({
 
           {sortedAchieved.length > 0 && (
             <>
-              <div className="mt-4 mb-2 text-xs text-neutral-500 dark:text-neutral-400">Achieved</div>
+              <div className="mt-4 mb-2 text-xs text-muted">Achieved</div>
               <div className="space-y-2">
                 {sortedAchieved.map((it) => (
                   <ItemRow

@@ -125,7 +125,7 @@ export function PlanView() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
+              <AlertTriangle className="h-4 w-4 text-muted" />
               Items excluded (currency mismatch)
             </CardTitle>
             <CardDescription>
@@ -138,7 +138,7 @@ export function PlanView() {
                 <BorderedBox key={it.id} className="flex items-center justify-between">
                   <div className="min-w-0">
                     <div className="truncate text-sm font-medium">{it.title}</div>
-                    <div className="text-xs text-neutral-500 dark:text-neutral-400">
+                    <div className="text-xs text-muted">
                       {it.category === "need" ? "Need" : "Want"} • {formatMoney(it.price, it.currency)}
                     </div>
                   </div>
@@ -158,7 +158,7 @@ export function PlanView() {
                 <span className={cn(
                   "text-sm font-medium",
                   m.spent > m.budgetAdded + m.budgetCarryIn
-                    ? "text-red-600 dark:text-red-500"
+                    ? "text-destructive"
                     : "text-neutral-600 dark:text-neutral-300"
                 )}>
                   Spent {formatMoney(m.spent, plan.baseCurrency)}
@@ -189,17 +189,17 @@ export function PlanView() {
                   )}
                 </span>{" "}
                 • Carry-in{" "}
-                <span className={m.budgetCarryIn < 0 ? "text-red-600 dark:text-red-500 font-medium" : ""}>
+                <span className={m.budgetCarryIn < 0 ? "text-destructive font-medium" : ""}>
                   {formatMoney(m.budgetCarryIn, plan.baseCurrency)}
                 </span> • Carry-out{" "}
-                <span className={m.budgetCarryOut < 0 ? "text-red-600 dark:text-red-500 font-medium" : ""}>
+                <span className={m.budgetCarryOut < 0 ? "text-destructive font-medium" : ""}>
                   {formatMoney(m.budgetCarryOut, plan.baseCurrency)}
                 </span>
               </CardDescription>
             </CardHeader>
             <CardContent>
               {m.picks.length === 0 ? (
-                <div className="text-sm text-neutral-500 dark:text-neutral-400">No affordable items this month.</div>
+                <div className="text-sm text-muted">No affordable items this month.</div>
               ) : (
                 <div className="space-y-2">
                   {m.picks.map((p, idx) => (
@@ -209,12 +209,12 @@ export function PlanView() {
                           <div
                             className={cn(
                               "truncate text-sm font-medium",
-                              p.achieved && "text-neutral-500 line-through dark:text-neutral-400"
+                              p.achieved && "text-muted line-through"
                             )}
                           >
                             {idx + 1}. {p.title}
                           </div>
-                          <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
+                          <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted">
                             {p.achieved && (
                               <Badge variant="secondary">Achieved</Badge>
                             )}
@@ -224,7 +224,7 @@ export function PlanView() {
                             )}
                             <span>{formatMoney(p.price, plan.baseCurrency)}</span>
                             {p.originalPrice != null && (
-                              <span className="text-neutral-400 dark:text-neutral-500">
+                              <span className="text-muted">
                                 (≈ {formatMoney(p.originalPrice, p.currency)})
                               </span>
                             )}
@@ -239,7 +239,7 @@ export function PlanView() {
               {plan.remainingUnplanned.length > 0 && (
                 <>
                   <Separator className="my-4" />
-                  <div className="text-xs text-neutral-500 dark:text-neutral-400">
+                  <div className="text-xs text-muted">
                     Remaining unplanned items: {plan.remainingUnplanned.length} (may require more months / bigger budget)
                   </div>
                 </>

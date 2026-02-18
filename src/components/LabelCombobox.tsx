@@ -153,7 +153,7 @@ export function LabelCombobox({
           role="listbox"
         >
           {options.length === 0 && !showCreate ? (
-            <li className="px-3 py-2 text-sm text-neutral-500 dark:text-neutral-400">No labels yet</li>
+            <li className="px-3 py-2 text-sm text-muted">No labels yet</li>
           ) : (
             options.map((opt, i) => {
               const isCreate = opt.__create;

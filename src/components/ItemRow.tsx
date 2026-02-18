@@ -47,14 +47,14 @@ export function ItemRow({
             <div
               className={cn(
                 "truncate text-sm font-medium",
-                item.achieved && "line-through text-neutral-400 dark:text-neutral-500"
+                item.achieved && "line-through text-muted"
               )}
             >
               {item.title}
             </div>
-            <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
+            <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted">
               {item.achieved && (
-                <span className="text-neutral-500 dark:text-neutral-400">Achieved {formatAchievedDate(item.updatedAt)}</span>
+                <span className="text-muted">Achieved {formatAchievedDate(item.updatedAt)}</span>
               )}
               <span>{formatMoney(item.price, item.currency)}</span>
               {/* <Badge variant="secondary">
@@ -67,7 +67,7 @@ export function ItemRow({
               {showLabels && (item.labels ?? []).length > 0 && (
                 <>
                   {(item.labels ?? []).map((l) => (
-                    <Badge key={l} variant="outline" className="font-normal text-neutral-500 dark:text-neutral-400">
+                    <Badge key={l} variant="outline" className="font-normal text-muted">
                       {l}
                     </Badge>
                   ))}

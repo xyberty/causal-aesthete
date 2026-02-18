@@ -11,6 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
 import { usePlanStore } from "@/store/usePlanStore";
 
 type ThemeValue = "system" | "light" | "dark";
@@ -50,7 +51,7 @@ export function Layout({ children, openPlanConfig, openFxRates, openHelp }: Layo
             </div>
             <div className="leading-tight">
               <div className="text-sm font-semibold">DNWP</div>
-              <div className="text-xs text-neutral-500 dark:text-neutral-400">Local-only wish list + acquisition planner</div>
+              <div className="text-xs text-muted">Local-only wish list + acquisition planner</div>
             </div>
           </div>
 
@@ -111,7 +112,7 @@ export function Layout({ children, openPlanConfig, openFxRates, openHelp }: Layo
                 <ImportExport />
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
-                  className="text-red-600 focus:text-red-600 dark:text-red-500 dark:focus:text-red-500"
+                  className="text-destructive-focus"
                   onSelect={(e) => {
                     e.preventDefault();
                     if (confirm("Reset everything? This cannot be undone.")) resetAll();
@@ -127,7 +128,7 @@ export function Layout({ children, openPlanConfig, openFxRates, openHelp }: Layo
 
       <main className="mx-auto max-w-4xl px-4 py-4">{children}</main>
 
-      <footer className="mx-auto max-w-4xl px-4 pb-8 pt-2 text-xs text-neutral-400 dark:text-neutral-500">
+      <footer className="mx-auto max-w-4xl px-4 pb-8 pt-2 text-xs text-muted">
         Built for local device storage. No network calls.
       </footer>
     </div>

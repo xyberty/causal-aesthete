@@ -217,7 +217,7 @@ export function ItemDialog({
                 </option>
               ))}
             </Select>
-            <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+            <p className="mt-1 text-xs text-muted">
               Items with a target month are prioritized and placed in that specific month if affordable.
             </p>
           </div>
