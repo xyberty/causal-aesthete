@@ -112,7 +112,7 @@ export function LabelCombobox({
 
   return (
     <div ref={containerRef} className={`relative ${className ?? ""}`}>
-      <div className="flex min-h-10 flex-wrap items-center gap-1.5 rounded-xl border border-neutral-200 bg-white px-2 py-1.5 focus-within:ring-2 focus-within:ring-neutral-300">
+      <div className="flex min-h-10 flex-wrap items-center gap-1.5 rounded-xl border border-neutral-200 bg-white px-2 py-1.5 focus-within:ring-2 focus-within:ring-neutral-300 dark:border-neutral-700 dark:bg-neutral-950 dark:focus-within:ring-neutral-700">
         {value.map((l) => (
           <Badge
             key={l}
@@ -123,7 +123,7 @@ export function LabelCombobox({
             <button
               type="button"
               onClick={() => onChange(value.filter((x) => x !== l))}
-              className="rounded p-0.5 hover:bg-neutral-300"
+              className="rounded p-0.5 hover:bg-neutral-300 dark:hover:bg-neutral-700"
               aria-label={`Remove ${l}`}
             >
               <X className="h-3 w-3" />
@@ -140,17 +140,17 @@ export function LabelCombobox({
           onFocus={() => setOpen(true)}
           onKeyDown={handleKeyDown}
           placeholder={value.length === 0 ? placeholder : ""}
-          className={`min-w-[8rem] flex-1 border-0 bg-transparent px-1 py-1 text-sm outline-none placeholder:text-neutral-400 ${inputClassName ?? ""}`}
+          className={`min-w-[8rem] flex-1 border-0 bg-transparent px-1 py-1 text-sm outline-none placeholder:text-neutral-400 dark:placeholder:text-neutral-500 ${inputClassName ?? ""}`}
           autoComplete="off"
         />
       </div>
       {open && (query.length > 0 || available.length > 0 || showCreate) && (
         <ul
-          className="absolute z-50 mt-1 max-h-48 w-full min-w-[12rem] overflow-auto rounded-xl border border-neutral-200 bg-white py-1 shadow-lg"
+          className="absolute z-50 mt-1 max-h-48 w-full min-w-[12rem] overflow-auto rounded-xl border border-neutral-200 bg-white py-1 shadow-lg dark:border-neutral-800 dark:bg-neutral-950"
           role="listbox"
         >
           {options.length === 0 && !showCreate ? (
-            <li className="px-3 py-2 text-sm text-neutral-500">No labels yet</li>
+            <li className="px-3 py-2 text-sm text-neutral-500 dark:text-neutral-400">No labels yet</li>
           ) : (
             options.map((opt, i) => {
               const isCreate = opt.__create;
@@ -162,7 +162,7 @@ export function LabelCombobox({
                   key={valueKey}
                   role="option"
                   aria-selected={i === highlightIndex}
-                  className={`cursor-pointer px-3 py-2 text-sm ${i === highlightIndex ? "bg-neutral-100" : ""} ${isCreate ? "text-neutral-600 italic" : ""}`}
+                  className={`cursor-pointer px-3 py-2 text-sm ${i === highlightIndex ? "bg-neutral-100 dark:bg-neutral-900" : ""} ${isCreate ? "text-neutral-600 italic dark:text-neutral-300" : ""}`}
                   onMouseEnter={() => setHighlightIndex(i)}
                   onClick={() =>
                     selectLabel(isCreate ? CREATE_PREFIX + label : label)

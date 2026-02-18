@@ -130,7 +130,7 @@ export default function App() {
             </div>
 
             {plan.months.length === 0 && (
-              <div className="mt-4 rounded-xl border border-neutral-200 p-3 text-sm text-neutral-600">
+              <div className="mt-4 rounded-xl border border-neutral-200 p-3 text-sm text-neutral-600 dark:border-neutral-800 dark:text-neutral-300">
                 No plan generated. Add items and set a monthly budget (optional but recommended).
               </div>
             )}
@@ -139,9 +139,15 @@ export default function App() {
 
         <Tabs defaultValue="needs">
           <TabsList className="w-full justify-start">
-            <TabsTrigger value="needs">Needs&ensp;<span className="text-neutral-400">{activeNeeds.length}</span></TabsTrigger>
-            <TabsTrigger value="wants">Wants&ensp;<span className="text-neutral-400">{activeWants.length}</span></TabsTrigger>
-            <TabsTrigger value="plan">Acquisition&ensp;<span className="text-neutral-400">{achieved.length}/{plannedCount}</span></TabsTrigger>
+            <TabsTrigger value="needs">
+              Needs&ensp;<span className="text-neutral-400 dark:text-neutral-500">{activeNeeds.length}</span>
+            </TabsTrigger>
+            <TabsTrigger value="wants">
+              Wants&ensp;<span className="text-neutral-400 dark:text-neutral-500">{activeWants.length}</span>
+            </TabsTrigger>
+            <TabsTrigger value="plan">
+              Acquisition&ensp;<span className="text-neutral-400 dark:text-neutral-500">{achieved.length}/{plannedCount}</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="needs">
@@ -264,7 +270,7 @@ function PlanConfigModal({
             <div className="space-y-1">
               <Label>Base currency</Label>
               <select
-                className="h-10 w-full rounded-xl border border-neutral-200 bg-white px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300"
+                className="h-10 w-full rounded-xl border border-neutral-200 bg-white px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 dark:border-neutral-700 dark:bg-neutral-950 dark:focus-visible:ring-neutral-700"
                 value={toCurrency(settings.baseCurrency)}
                 onChange={(e) => setSettings({ baseCurrency: e.target.value as Currency })}
               >
@@ -296,7 +302,7 @@ function PlanConfigModal({
           <div className="space-y-1">
             <Label>Carryover</Label>
             <select
-              className="h-10 w-full rounded-xl border border-neutral-200 bg-white px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300"
+              className="h-10 w-full rounded-xl border border-neutral-200 bg-white px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 dark:border-neutral-700 dark:bg-neutral-950 dark:focus-visible:ring-neutral-700"
               value={settings.carryover ? "yes" : "no"}
               onChange={(e) => setSettings({ carryover: e.target.value === "yes" })}
             >
@@ -307,7 +313,7 @@ function PlanConfigModal({
           <div className="space-y-1">
             <Label>Priority mode</Label>
             <select
-              className="h-10 w-full rounded-xl border border-neutral-200 bg-white px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300"
+              className="h-10 w-full rounded-xl border border-neutral-200 bg-white px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 dark:border-neutral-700 dark:bg-neutral-950 dark:focus-visible:ring-neutral-700"
               value={settings.priorityMode}
               onChange={(e) => setSettings({ priorityMode: e.target.value as PriorityMode })}
             >
@@ -334,13 +340,13 @@ function PlanConfigModal({
           </div>
           <Separator className="my-4" />
           <div className="space-y-2">
-            <div className="text-sm font-medium text-neutral-700">Advanced</div>
+            <div className="text-sm font-medium text-neutral-700 dark:text-neutral-200">Advanced</div>
             <label className="flex cursor-pointer items-center gap-2 text-sm">
               <input
                 type="checkbox"
                 checked={settings.enableLabels ?? false}
                 onChange={(e) => setSettings({ enableLabels: e.target.checked })}
-                className="h-4 w-4 rounded border-neutral-300"
+                className="h-4 w-4 rounded border-neutral-300 dark:border-neutral-700"
               />
               Enable labels on items (e.g. family, bike, living-room)
             </label>
@@ -349,7 +355,7 @@ function PlanConfigModal({
                 type="checkbox"
                 checked={settings.allowBudgetExceed ?? false}
                 onChange={(e) => setSettings({ allowBudgetExceed: e.target.checked })}
-                className="h-4 w-4 rounded border-neutral-300"
+                className="h-4 w-4 rounded border-neutral-300 dark:border-neutral-700"
               />
               Allow monthly budget exceed (manual items with target month can exceed budget)
             </label>
@@ -358,7 +364,7 @@ function PlanConfigModal({
                 type="checkbox"
                 checked={settings.enableMonthlyBudgetOverrides ?? false}
                 onChange={(e) => setSettings({ enableMonthlyBudgetOverrides: e.target.checked })}
-                className="h-4 w-4 rounded border-neutral-300"
+                className="h-4 w-4 rounded border-neutral-300 dark:border-neutral-700"
               />
               Enable monthly budget overrides (override budget for specific months)
             </label>
@@ -444,7 +450,7 @@ function FxRatesEditor({
         <div className="space-y-1">
           <Label className="text-xs">Currency</Label>
           <select
-            className="h-10 w-24 rounded-xl border border-neutral-200 bg-white px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300"
+            className="h-10 w-24 rounded-xl border border-neutral-200 bg-white px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 dark:border-neutral-700 dark:bg-neutral-950 dark:focus-visible:ring-neutral-700"
             value={newCcy}
             onChange={(e) => setNewCcy(e.target.value ? (e.target.value as Currency) : "")}
           >
@@ -471,18 +477,18 @@ function FxRatesEditor({
         </Button>
       </div>
       {entries.length > 0 && (
-        <ul className="space-y-1 rounded-xl border border-neutral-200 p-2">
+        <ul className="space-y-1 rounded-xl border border-neutral-200 p-2 dark:border-neutral-800">
           {entries.map(([ccy, rate]) => (
             <li key={ccy} className="flex items-center justify-between gap-2 text-sm">
               <span className="font-medium">1 {ccy}</span>
-              <span className="text-neutral-500">=</span>
+              <span className="text-neutral-500 dark:text-neutral-400">=</span>
               <Input
                 className="h-8 w-24"
                 inputMode="decimal"
                 value={rate}
                 onChange={(e) => updateRate(ccy, Number(e.target.value))}
               />
-              <span className="text-neutral-500">{baseCurrency}</span>
+              <span className="text-neutral-500 dark:text-neutral-400">{baseCurrency}</span>
               <Button type="button" variant="ghost" size="sm" className="h-8 px-2" onClick={() => removeRate(ccy)}>
                 Remove
               </Button>
@@ -505,7 +511,7 @@ function HelpModal({ open, onOpenChange }: { open: boolean; onOpenChange: (open:
             fair need/want ratio, with carryover optional.
           </DialogDescription>
         </DialogHeader>
-        <ul className="list-disc space-y-1 pl-5 text-sm text-neutral-600">
+        <ul className="list-disc space-y-1 pl-5 text-sm text-neutral-600 dark:text-neutral-300">
           <li>Only non-achieved items are considered.</li>
           <li>Items in base currency are planned; others use manual FX rates (Settings) to convert to base.</li>
           <li>Needs are favored but wants are interleaved (ratio control).</li>
@@ -535,7 +541,7 @@ function SortableItemRow({
         onEdit={() => onEdit(item.id)}
         priorityMode={priorityMode}
         dragHandleProps={{ attributes, listeners }}
-        dragHandleIcon={<GripVertical className="h-5 w-5 shrink-0 text-neutral-400" aria-hidden />}
+        dragHandleIcon={<GripVertical className="h-5 w-5 shrink-0 text-neutral-400 dark:text-neutral-600" aria-hidden />}
         showLabels={showLabels}
       />
     </div>
@@ -625,7 +631,7 @@ function ListSection({
           </div>
           {showLabels && (
             <div className="flex flex-wrap items-center justify-end gap-2">
-              <span className="flex items-center gap-1.5 text-xs text-neutral-500">
+              <span className="flex items-center gap-1.5 text-xs text-neutral-500 dark:text-neutral-400">
                 <ListFilterIcon className="h-3.5 w-3.5" />
               </span>
               {hasFilter && (filterLabels ?? []).map((l) => (
@@ -642,7 +648,7 @@ function ListSection({
                         (filterLabels ?? []).filter((x) => x !== l)
                       )
                     }
-                    className="rounded p-0.5 hover:bg-neutral-300"
+                  className="rounded p-0.5 hover:bg-neutral-300 dark:hover:bg-neutral-700"
                     aria-label={`Remove filter ${l}`}
                   >
                     <X className="h-3 w-3" />
@@ -650,7 +656,7 @@ function ListSection({
                 </Badge>
               ))}
               <select
-                className="h-8 rounded-lg border border-neutral-200 bg-white px-2 text-xs text-neutral-600"
+              className="h-8 rounded-lg border border-neutral-200 bg-white px-2 text-xs text-neutral-600 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-300"
                 value=""
                 onChange={(e) => {
                   const v = e.target.value;
@@ -674,7 +680,7 @@ function ListSection({
                   type="button"
                   variant={null}
                   size="sm"
-                  className="h-8 text-xs text-neutral-500"
+                  className="h-8 text-xs text-neutral-500 dark:text-neutral-400"
                   onClick={onClearFilter}
                 >
                     <X size={16} />
@@ -685,7 +691,7 @@ function ListSection({
         </CardHeader>
         <CardContent>
           {sorted.length === 0 ? (
-            <div className="text-sm text-neutral-500">
+            <div className="text-sm text-neutral-500 dark:text-neutral-400">
               {hasFilter ? "No items match the filter." : "No active items."}
             </div>
           ) : (
@@ -708,7 +714,7 @@ function ListSection({
 
           {sortedAchieved.length > 0 && (
             <>
-              <div className="mt-4 mb-2 text-xs text-neutral-500">Achieved</div>
+              <div className="mt-4 mb-2 text-xs text-neutral-500 dark:text-neutral-400">Achieved</div>
               <div className="space-y-2">
                 {sortedAchieved.map((it) => (
                   <ItemRow

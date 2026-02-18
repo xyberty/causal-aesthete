@@ -1,6 +1,6 @@
-# Wish Plan (Local-only SPA)
+# Do not Wish. Plan
 
-A local-first wish list + acquisition planner.
+DNWP ("Do not Wish. Plan") is a local-first wish list + acquisition planner.
 
 ## Tech stack
 - **Build:** Vite 7, React 18, TypeScript 5
@@ -15,10 +15,11 @@ A local-first wish list + acquisition planner.
 - Achieved toggle (strikethrough)
 - Plan settings: start date + monthly free budget + carryover
 - Month-by-month acquisition plan (fair interleaving of needs/wants)
+- Month budget overrides for plan customization
 - Local-only persistence (IndexedDB)
 - Export/Import JSON backup
 
-### Planningn algorithm
+### Planning algorithm
 
 **Budgeted Weighted Fair Interleaving (BWFI)** — is a practical planning heuristic that behaves well, is explainable to users, and is easy to maintain.
 

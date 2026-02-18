@@ -85,7 +85,7 @@ function InlineBudgetEditor({
           setEditing(true);
           setInputValue(String(currentBudget));
         }}
-        className="inline-flex items-center justify-center rounded p-0.5 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600"
+        className="inline-flex items-center justify-center rounded p-0.5 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
         aria-label="Edit budget"
       >
         <Pencil className="h-3 w-3" />
@@ -94,7 +94,7 @@ function InlineBudgetEditor({
         <button
           type="button"
           onClick={handleReset}
-          className="inline-flex items-center justify-center rounded p-0.5 text-neutral-400 hover:bg-neutral-100 hover:text-red-600"
+          className="inline-flex items-center justify-center rounded p-0.5 text-neutral-400 hover:bg-neutral-100 hover:text-red-600 dark:hover:bg-neutral-800"
           aria-label="Reset to default"
         >
           <X className="h-3 w-3" />
@@ -117,7 +117,7 @@ export function PlanView() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-neutral-500" />
+              <AlertTriangle className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
               Items excluded (currency mismatch)
             </CardTitle>
             <CardDescription>
@@ -127,10 +127,13 @@ export function PlanView() {
           <CardContent>
             <div className="space-y-2">
               {plan.excludedOtherCurrencies.map((it) => (
-                <div key={it.id} className="flex items-center justify-between rounded-xl border border-neutral-200 p-3">
+                <div
+                  key={it.id}
+                  className="flex items-center justify-between rounded-xl border border-neutral-200 p-3 dark:border-neutral-800"
+                >
                   <div className="min-w-0">
                     <div className="truncate text-sm font-medium">{it.title}</div>
-                    <div className="text-xs text-neutral-500">
+                    <div className="text-xs text-neutral-500 dark:text-neutral-400">
                       {it.category === "need" ? "Need" : "Want"} • {formatMoney(it.price, it.currency)}
                     </div>
                   </div>
@@ -149,7 +152,9 @@ export function PlanView() {
                 <span>{m.monthKey}</span>
                 <span className={cn(
                   "text-sm font-medium",
-                  m.spent > m.budgetAdded + m.budgetCarryIn ? "text-red-600 dark:text-red-500" : "text-neutral-600"
+                  m.spent > m.budgetAdded + m.budgetCarryIn
+                    ? "text-red-600 dark:text-red-500"
+                    : "text-neutral-600 dark:text-neutral-300"
                 )}>
                   Spent {formatMoney(m.spent, plan.baseCurrency)}
                 </span>
@@ -189,7 +194,7 @@ export function PlanView() {
             </CardHeader>
             <CardContent>
               {m.picks.length === 0 ? (
-                <div className="text-sm text-neutral-500">No affordable items this month.</div>
+                <div className="text-sm text-neutral-500 dark:text-neutral-400">No affordable items this month.</div>
               ) : (
                 <div className="space-y-2">
                   {m.picks.map((p, idx) => (
@@ -198,8 +203,8 @@ export function PlanView() {
                       className={cn(
                         "rounded-xl border p-3",
                         p.achieved
-                          ? "border-neutral-200 bg-neutral-50"
-                          : "border-neutral-200"
+                          ? "border-neutral-200 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900/40"
+                          : "border-neutral-200 dark:border-neutral-800"
                       )}
                     >
                       <div className="flex items-center justify-between gap-3">
@@ -207,24 +212,27 @@ export function PlanView() {
                           <div
                             className={cn(
                               "truncate text-sm font-medium",
-                              p.achieved && "text-neutral-500 line-through"
+                              p.achieved && "text-neutral-500 line-through dark:text-neutral-400"
                             )}
                           >
                             {idx + 1}. {p.title}
                           </div>
-                          <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-neutral-500">
+                          <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
                             {p.achieved && (
                               <Badge variant="secondary">Achieved</Badge>
                             )}
                             <Badge variant="outline">{p.category === "need" ? "Need" : "Want"}</Badge>
                             {p.targetMonthKey && (
-                              <Badge variant="default" className="bg-blue-100 text-blue-800 border-blue-200">
+                              <Badge
+                                variant="default"
+                                className="border-blue-200 bg-blue-100 text-blue-800 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-200"
+                              >
                                 {p.targetMonthKey}
                               </Badge>
                             )}
                             <span>{formatMoney(p.price, plan.baseCurrency)}</span>
                             {p.originalPrice != null && (
-                              <span className="text-neutral-400">
+                              <span className="text-neutral-400 dark:text-neutral-500">
                                 (≈ {formatMoney(p.originalPrice, p.currency)})
                               </span>
                             )}
@@ -239,7 +247,7 @@ export function PlanView() {
               {plan.remainingUnplanned.length > 0 && (
                 <>
                   <Separator className="my-4" />
-                  <div className="text-xs text-neutral-500">
+                  <div className="text-xs text-neutral-500 dark:text-neutral-400">
                     Remaining unplanned items: {plan.remainingUnplanned.length} (may require more months / bigger budget)
                   </div>
                 </>

@@ -104,29 +104,34 @@ export function ItemDialog({
           ? defaultPriority
           : 1;
 
-    const payload: Partial<Omit<Item, "id" | "createdAt">> = {
-      title: parsed.title,
-      price: parsed.price,
-      currency: toCurrency(form.currency.trim().toUpperCase() || "EUR"),
-      category: form.category,
-      priority,
-      achieved: editing?.achieved ?? false,
-      ...(enableLabels && { labels: form.labels }),
-    };
-    
-    // Explicitly set targetMonthKey to undefined if cleared, or set it if provided
-    if (editing) {
-      // When editing, always include targetMonthKey (even if undefined to clear it)
-      payload.targetMonthKey = parsed.targetMonthKey || undefined;
-    } else {
-      // When adding, only include if set
-      if (parsed.targetMonthKey) {
-        payload.targetMonthKey = parsed.targetMonthKey;
-      }
-    }
+    const currency = toCurrency(form.currency.trim().toUpperCase() || "EUR");
 
-    if (editing) updateItem(editing.id, payload);
-    else addItem(payload);
+    if (editing) {
+      const patch: Partial<Omit<Item, "id" | "createdAt">> = {
+        title: parsed.title,
+        price: parsed.price,
+        currency,
+        category: form.category,
+        priority,
+        achieved: editing.achieved,
+        ...(enableLabels && { labels: form.labels }),
+        // When editing, always include (even if undefined to clear it)
+        targetMonthKey: parsed.targetMonthKey || undefined,
+      };
+      updateItem(editing.id, patch);
+    } else {
+      const item: Omit<Item, "id" | "createdAt" | "updatedAt"> = {
+        title: parsed.title,
+        price: parsed.price,
+        currency,
+        category: form.category,
+        priority,
+        achieved: false,
+        ...(enableLabels && { labels: form.labels }),
+        ...(parsed.targetMonthKey ? { targetMonthKey: parsed.targetMonthKey } : {}),
+      };
+      addItem(item);
+    }
 
     onOpenChange(false);
   }
@@ -161,7 +166,7 @@ export function ItemDialog({
             <div className="space-y-1">
               <Label>Currency</Label>
               <select
-                className="h-10 w-full rounded-xl border border-neutral-200 bg-white px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300"
+                className="h-10 w-full rounded-xl border border-neutral-200 bg-white px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 dark:border-neutral-700 dark:bg-neutral-950 dark:focus-visible:ring-neutral-700"
                 value={toCurrency(form.currency)}
                 onChange={(e) => setForm((s) => ({ ...s, currency: e.target.value }))}
               >
@@ -178,7 +183,7 @@ export function ItemDialog({
             <div className="space-y-1">
               <Label>Category</Label>
               <select
-                className="h-10 w-full rounded-xl border border-neutral-200 bg-white px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300"
+                className="h-10 w-full rounded-xl border border-neutral-200 bg-white px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 dark:border-neutral-700 dark:bg-neutral-950 dark:focus-visible:ring-neutral-700"
                 value={form.category}
                 onChange={(e) => setForm((s) => ({ ...s, category: e.target.value as Category }))}
               >
@@ -203,7 +208,7 @@ export function ItemDialog({
           <div className="space-y-1">
             <Label>Target month (optional)</Label>
             <select
-              className="h-10 w-full rounded-xl border border-neutral-200 bg-white px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300"
+              className="h-10 w-full rounded-xl border border-neutral-200 bg-white px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 dark:border-neutral-700 dark:bg-neutral-950 dark:focus-visible:ring-neutral-700"
               value={form.targetMonthKey}
               onChange={(e) => setForm((s) => ({ ...s, targetMonthKey: e.target.value }))}
             >
@@ -214,7 +219,7 @@ export function ItemDialog({
                 </option>
               ))}
             </select>
-            <p className="text-xs text-neutral-500 mt-1">
+            <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
               Items with a target month are prioritized and placed in that specific month if affordable.
             </p>
           </div>

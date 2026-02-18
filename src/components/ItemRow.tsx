@@ -30,20 +30,30 @@ export function ItemRow({
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <button
-            className="mt-0.5 text-neutral-500 hover:text-neutral-900"
+            className="mt-0.5 text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100"
             onClick={() => toggleAchieved(item.id)}
             aria-label={item.achieved ? "Mark as active" : "Mark as achieved"}
           >
-            <CheckCircle2 className={cn("h-5 w-5", item.achieved ? "text-neutral-900" : "text-neutral-300")} />
+            <CheckCircle2
+              className={cn(
+                "h-5 w-5",
+                item.achieved ? "text-neutral-900 dark:text-neutral-50" : "text-neutral-300 dark:text-neutral-700"
+              )}
+            />
           </button>
 
           <div className="min-w-0">
-            <div className={cn("truncate text-sm font-medium", item.achieved && "line-through text-neutral-400")}>
+            <div
+              className={cn(
+                "truncate text-sm font-medium",
+                item.achieved && "line-through text-neutral-400 dark:text-neutral-500"
+              )}
+            >
               {item.title}
             </div>
-            <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-neutral-500">
+            <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
               {item.achieved && (
-                <span className="text-neutral-500">Achieved {formatAchievedDate(item.updatedAt)}</span>
+                <span className="text-neutral-500 dark:text-neutral-400">Achieved {formatAchievedDate(item.updatedAt)}</span>
               )}
               <span>{formatMoney(item.price, item.currency)}</span>
               {/* <Badge variant="secondary">
@@ -51,14 +61,17 @@ export function ItemRow({
               </Badge> */}
               <Badge variant="outline">{item.category === "need" ? "Need" : "Want"}</Badge>
               {item.targetMonthKey && (
-                <Badge variant="default" className="bg-blue-100 text-blue-800 border-blue-200">
+                <Badge
+                  variant="default"
+                  className="border-blue-200 bg-blue-100 text-blue-800 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-200"
+                >
                   {item.targetMonthKey}
                 </Badge>
               )}
               {showLabels && (item.labels ?? []).length > 0 && (
                 <>
                   {(item.labels ?? []).map((l) => (
-                    <Badge key={l} variant="outline" className="font-normal text-neutral-500">
+                    <Badge key={l} variant="outline" className="font-normal text-neutral-500 dark:text-neutral-400">
                       {l}
                     </Badge>
                   ))}
@@ -72,7 +85,7 @@ export function ItemRow({
   );
 
   return (
-    <div className="flex items-start justify-between gap-3 rounded-xl border border-neutral-200 p-3">
+    <div className="flex items-start justify-between gap-3 rounded-xl border border-neutral-200 p-3 dark:border-neutral-800">
       {dragHandleProps ? (
         <div
           {...(dragHandleProps.attributes ?? {})}
