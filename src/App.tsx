@@ -341,27 +341,27 @@ function PlanConfigModal({
           <Separator className="my-4" />
           <div className="space-y-2">
             <div className="text-sm font-medium text-neutral-700 dark:text-neutral-200">Advanced</div>
-            <label className="flex cursor-pointer items-center gap-2 text-sm">
-              <Checkbox
-                checked={settings.enableLabels ?? false}
-                onChange={(e) => setSettings({ enableLabels: e.target.checked })}
-              />
-              Enable labels on items (e.g. family, bike, living-room)
-            </label>
-            <label className="flex cursor-pointer items-center gap-2 text-sm">
-              <Checkbox
-                checked={settings.allowBudgetExceed ?? false}
-                onChange={(e) => setSettings({ allowBudgetExceed: e.target.checked })}
-              />
-              Allow monthly budget exceed (manual items with target month can exceed budget)
-            </label>
-            <label className="flex cursor-pointer items-center gap-2 text-sm">
-              <Checkbox
-                checked={settings.enableMonthlyBudgetOverrides ?? false}
-                onChange={(e) => setSettings({ enableMonthlyBudgetOverrides: e.target.checked })}
-              />
-              Enable monthly budget overrides (override budget for specific months)
-            </label>
+            <Checkbox
+              label="Enable labels on items"
+              checked={settings.enableLabels ?? false}
+              onChange={(e) => setSettings({ enableLabels: e.target.checked })}
+            >
+              e.g. family, bike, living-room
+            </Checkbox>
+            <Checkbox
+              label="Allow monthly budget exceed"
+              checked={settings.allowBudgetExceed ?? false}
+              onChange={(e) => setSettings({ allowBudgetExceed: e.target.checked })}
+            >
+              Manual items with target month can exceed budget
+            </Checkbox>
+            <Checkbox
+              label="Enable monthly budget overrides"
+              checked={settings.enableMonthlyBudgetOverrides ?? false}
+              onChange={(e) => setSettings({ enableMonthlyBudgetOverrides: e.target.checked })}
+            >
+              Override budget for specific months
+            </Checkbox>
           </div>
         </div>
       </DialogContent>
