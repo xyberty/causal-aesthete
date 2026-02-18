@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Plus, GripVertical, X, ListFilterIcon } from "lucide-react";
+import { Plus, GripVertical, X, ListFilterIcon, Info } from "lucide-react";
 import {
   DndContext,
   closestCenter,
@@ -30,6 +30,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { ItemDialog } from "@/components/ItemDialog";
 import { ItemRow } from "@/components/ItemRow";
 import { Badge } from "@/components/ui/badge";
@@ -117,18 +122,39 @@ export default function App() {
       <div className="space-y-4">
         <Card>
           <CardHeader>
-            <CardTitle>Current plan</CardTitle>
-            <CardDescription>
+            <div className="flex items-center gap-2">
+              <CardTitle className="flex-1">Current plan</CardTitle>
+              {/* Mobile: plan summary in (i) popover to save vertical space */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="shrink-0 h-7 w-7 sm:hidden text-muted hover:text-neutral-900 dark:hover:text-neutral-100 p-0.5"
+                    aria-label="Plan summary"
+                  >
+                    <Info className="h-5 w-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="max-w-[min(90vw,20rem)] p-3">
+                  <p className="text-sm">
+                    Start {plan.startDate} • {formatMoney(plan.monthlyBudget, plan.baseCurrency)} per month •{" "}
+                    {plan.carryover ? "carryover on" : "carryover off"} • ratio {plan.ratioNeeds}:{plan.ratioWants} (need:want)
+                  </p>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+            <CardDescription className="hidden sm:block">
               Start {plan.startDate} • {formatMoney(plan.monthlyBudget, plan.baseCurrency)} per month •{" "}
               {plan.carryover ? "carryover on" : "carryover off"} • ratio {plan.ratioNeeds}:{plan.ratioWants} (need:want)
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-0 sm:pt-2">
             <div className="flex flex-wrap items-center gap-2">
-              <Badge>Planned: {plannedCount}</Badge>
-              <Badge variant="secondary">Unplanned: {plan.remainingUnplanned.length}</Badge>
+              <Badge>Planned {plannedCount}</Badge>
+              <Badge variant="secondary">Unplanned {plan.remainingUnplanned.length}</Badge>
               {plan.excludedOtherCurrencies.length > 0 && (
-                <Badge variant="secondary">Excluded: {plan.excludedOtherCurrencies.length} (currency)</Badge>
+                <Badge variant="secondary">Excluded {plan.excludedOtherCurrencies.length} (currency)</Badge>
               )}
             </div>
 
@@ -621,7 +647,7 @@ function ListSection({
         <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3">
           <div>
             <CardTitle>{title}</CardTitle>
-            <CardDescription>{description}</CardDescription>
+            <CardDescription className="hidden sm:block">{description}</CardDescription>
           </div>
           {showLabels && (
             <div className="flex flex-wrap items-center justify-end gap-2">

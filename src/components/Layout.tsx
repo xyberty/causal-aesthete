@@ -50,8 +50,8 @@ export function Layout({ children, openPlanConfig, openFxRates, openHelp }: Layo
               <Heart className="h-4 w-4" />
             </div>
             <div className="leading-tight">
-              <div className="text-sm font-semibold">DNWP</div>
-              <div className="text-xs text-muted">Local-only wish list + acquisition planner</div>
+              <div className="text-base sm:text-sm font-semibold">DNWP</div>
+              <div className="hidden sm:block text-xs text-muted">Local-only wish list + acquisition planner</div>
             </div>
           </div>
 
