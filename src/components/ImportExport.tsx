@@ -12,13 +12,13 @@ export function ImportExport() {
     const payload = {
       ...state,
       exportedAt: new Date().toISOString(),
-      app: "wish-plan",
+      app: "do-not-wish-plan",
     };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `wish-plan-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.download = `do-not-wish-plan_backup_${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
   }

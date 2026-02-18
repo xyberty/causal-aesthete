@@ -1,6 +1,6 @@
 import localforage from "localforage";
 
-export const STORAGE_KEY = "wish-plan:v1";
+export const STORAGE_KEY = "do-not-wish-plan:v1";
 
 localforage.config({
   name: "wish-plan",
