@@ -142,7 +142,7 @@ export function ItemRow({
   return (
     <BorderedBox
       ref={cardRef}
-      className="relative flex items-start justify-between gap-3"
+      className="relative flex items-center justify-between gap-3"
     >
       {dragHandleProps ? (
         <div
@@ -177,7 +177,6 @@ export function ItemRow({
         >
           <Trash2 className="h-4 w-4" />
         </Button>
-        {dragHandleIcon}
       </div>
 
       {/* Mobile: overlay with Edit/Delete when card is tapped */}
@@ -211,7 +210,7 @@ export function ItemRow({
       )}
 
       {dragHandleIcon && (
-        <div className="hidden md:block shrink-0">{dragHandleIcon}</div>
+        <div className="shrink-0">{dragHandleIcon}</div>
       )}
     </BorderedBox>
   );
